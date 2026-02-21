@@ -393,7 +393,7 @@ export const Trans_Register = () => {
                     <option value="open">Open</option>
                     <option value="trailer">Trailer</option>
                     <option value="container">Container</option>
-                    <option value="refer vehicle/cold storage">Refer Vehicle/Cold Storage</option>
+                    <option value="refrigerated">Refer Vehicle/Cold Storage</option>
                   </select>
                 </div>
 
