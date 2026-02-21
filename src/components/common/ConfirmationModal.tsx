@@ -10,6 +10,7 @@ interface ConfirmationModalProps {
   confirmText?: string
   cancelText?: string
   type?: 'danger' | 'warning' | 'info'
+  variant?: 'danger' | 'warning' | 'info'
 }
 
 export const ConfirmationModal = ({
@@ -20,9 +21,12 @@ export const ConfirmationModal = ({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  type = 'warning',
+  type,
+  variant,
 }: ConfirmationModalProps) => {
   if (!isOpen) return null
+
+  const finalType = variant || type || 'warning'
 
   const typeConfig = {
     danger: {
@@ -42,7 +46,7 @@ export const ConfirmationModal = ({
     },
   }
 
-  const config = typeConfig[type]
+  const config = typeConfig[finalType]
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
