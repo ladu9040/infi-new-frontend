@@ -13,6 +13,7 @@ export const Trans_Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -35,23 +36,77 @@ export const Trans_Register = () => {
   })
   const [registerTransporter, { loading }] = useMutation(REGISTER_TRANSPORTER_MUTATION)
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+    
+    // Email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = 'Invalid email format'
+    }
+    
+    // Phone numbers (10 digits)
+    if (!/^\d{10}$/.test(form.phoneNumber)) {
+      newErrors.phoneNumber = 'Phone number must be 10 digits'
+    }
+    if (form.alternatePhoneNumber && !/^\d{10}$/.test(form.alternatePhoneNumber)) {
+      newErrors.alternatePhoneNumber = 'Alternate phone number must be 10 digits'
+    }
+    
+    // PAN (10 alphanumeric)
+    if (form.panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.panNumber.toUpperCase())) {
+      newErrors.panNumber = 'Invalid PAN format (e.g., ABCDE1234F)'
+    }
+    
+    // GST (15 alphanumeric)
+    if (form.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(form.gstNumber.toUpperCase())) {
+      newErrors.gstNumber = 'Invalid GST format (15 characters)'
+    }
+    
+    // PIN Code (6 digits)
+    if (!/^\d{6}$/.test(form.pinCode)) {
+      newErrors.pinCode = 'PIN code must be 6 digits'
+    }
+    
+    // Password
+    if (form.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    }
+    
+    // Confirm Password
+    if (form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setForm({ ...form, [name]: value })
+    // Clear error when user types
+    if (errors[name]) {
+      setErrors(prev => {
+        const updated = { ...prev }
+        delete updated[name]
+        return updated
+      })
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)
-
-    if (!agreeTerms) {
-      setErrorMsg('Please accept Terms & Conditions')
+    
+    if (!validateForm()) {
+      setErrorMsg('Please fix the errors below')
       return
     }
 
-    if (form.password !== form.confirmPassword) {
-      setErrorMsg('Passwords do not match')
+    if (!agreeTerms) {
+      setErrorMsg('Please accept Terms & Conditions')
       return
     }
 
@@ -168,6 +223,7 @@ export const Trans_Register = () => {
                     placeholder="your.email@example.com"
                     required
                   />
+                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                 </div>
 
                 {/* Phone Number */}
@@ -184,6 +240,7 @@ export const Trans_Register = () => {
                     placeholder="+91 XXXXX XXXXX"
                     required
                   />
+                  {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
                 </div>
 
                 {/* Alternate Phone */}
@@ -199,6 +256,7 @@ export const Trans_Register = () => {
                     className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
                     placeholder="+91 XXXXX XXXXX"
                   />
+                  {errors.alternatePhoneNumber && <p className="text-red-500 text-xs mt-1">{errors.alternatePhoneNumber}</p>}
                 </div>
               </div>
             </div>
@@ -237,6 +295,7 @@ export const Trans_Register = () => {
                     className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
                     placeholder="22AAAAA0000A1Z5"
                   />
+                  {errors.gstNumber && <p className="text-red-500 text-xs mt-1">{errors.gstNumber}</p>}
                 </div>
 
                 {/* PAN Number */}
@@ -252,6 +311,7 @@ export const Trans_Register = () => {
                     className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
                     placeholder="ABCDE1234F"
                   />
+                  {errors.panNumber && <p className="text-red-500 text-xs mt-1">{errors.panNumber}</p>}
                 </div>
 
                 {/* Business Type */}
@@ -352,6 +412,7 @@ export const Trans_Register = () => {
                     placeholder="000000"
                     required
                   />
+                  {errors.pinCode && <p className="text-red-500 text-xs mt-1">{errors.pinCode}</p>}
                 </div>
               </div>
             </div>
@@ -519,6 +580,7 @@ export const Trans_Register = () => {
                       )}
                     </button>
                   </div>
+                  {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                 </div>
 
                 {/* Confirm Password */}
@@ -548,6 +610,7 @@ export const Trans_Register = () => {
                       )}
                     </button>
                   </div>
+                  {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
                 </div>
               </div>
             </div>
