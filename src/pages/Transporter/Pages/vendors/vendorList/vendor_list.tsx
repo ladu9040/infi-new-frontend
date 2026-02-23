@@ -8,6 +8,7 @@ import type { GetAllVendorsResponse, VendorListProps } from './VendorList.types'
 import { RfiPreviewModal } from './RfiPreviewModal'
 import { AuthContext } from '../../../../../context/AuthContextObject'
 import { ConfirmationModal } from '../../../../../components/common/ConfirmationModal'
+import Loader from '../../../../../components/common/Loader'
 
 export const Vendor_List = ({ onAddVendor, onViewQuotations }: VendorListProps) => {
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null)
@@ -56,8 +57,9 @@ export const Vendor_List = ({ onAddVendor, onViewQuotations }: VendorListProps) 
   }
 
   if (loading) {
-    return <div className="bg-gray-50 p-6 rounded-xl text-gray-500">Loading vendors...</div>
+    return <div className="flex items-center justify-center p-12 text-amber-600 font-medium">Loading vendors...</div>
   }
+
 
   if (error) {
     return <div className="bg-red-50 p-6 rounded-xl text-red-600">{error.message}</div>

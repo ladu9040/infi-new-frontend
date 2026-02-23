@@ -1,14 +1,22 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Truck, Upload, ChevronLeft } from 'lucide-react'
+import { Eye, EyeOff, Truck, Upload, ChevronLeft, ChevronRight, CheckCircle2, User, Building2, Car, ShieldCheck, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@apollo/client/react'
 import { toast } from 'react-toastify'
 import { REGISTER_TRANSPORTER_MUTATION } from './transRegister'
 import { Alert } from '../../../../components/common/Alert'
-import Loader from '../../../../components/common/Loader'
+
+const STEPS = [
+  { id: 1, title: 'Personal', icon: User },
+  { id: 2, title: 'Business', icon: Building2 },
+  { id: 3, title: 'Fleet', icon: Car },
+  { id: 4, title: 'Documents', icon: ShieldCheck },
+  { id: 5, title: 'Security', icon: Lock },
+]
 
 export const Trans_Register = () => {
   const navigate = useNavigate()
+  const [currentStep, setCurrentStep] = useState(1)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
@@ -36,49 +44,47 @@ export const Trans_Register = () => {
   })
   const [registerTransporter, { loading }] = useMutation(REGISTER_TRANSPORTER_MUTATION)
 
-  const validateForm = () => {
+  const validateStep = (step: number) => {
     const newErrors: Record<string, string> = {}
     
-    // Email
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      newErrors.email = 'Invalid email format'
-    }
-    
-    // Phone numbers (10 digits)
-    if (!/^\d{10}$/.test(form.phoneNumber)) {
-      newErrors.phoneNumber = 'Phone number must be 10 digits'
-    }
-    if (form.alternatePhoneNumber && !/^\d{10}$/.test(form.alternatePhoneNumber)) {
-      newErrors.alternatePhoneNumber = 'Alternate phone number must be 10 digits'
-    }
-    
-    // PAN (10 alphanumeric)
-    if (form.panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.panNumber.toUpperCase())) {
-      newErrors.panNumber = 'Invalid PAN format (e.g., ABCDE1234F)'
-    }
-    
-    // GST (15 alphanumeric)
-    if (form.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(form.gstNumber.toUpperCase())) {
-      newErrors.gstNumber = 'Invalid GST format (15 characters)'
-    }
-    
-    // PIN Code (6 digits)
-    if (!/^\d{6}$/.test(form.pinCode)) {
-      newErrors.pinCode = 'PIN code must be 6 digits'
-    }
-    
-    // Password
-    if (form.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
-    }
-    
-    // Confirm Password
-    if (form.password !== form.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
+    if (step === 1) {
+      if (!form.fullName) newErrors.fullName = 'Full Name is required'
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = 'Invalid email format'
+      if (!/^\d{10}$/.test(form.phoneNumber)) newErrors.phoneNumber = 'Phone number must be 10 digits'
+    } else if (step === 2) {
+      if (!form.companyName) newErrors.companyName = 'Company Name is required'
+      if (form.panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.panNumber.toUpperCase())) {
+        newErrors.panNumber = 'Invalid PAN format'
+      }
+      if (form.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(form.gstNumber.toUpperCase())) {
+        newErrors.gstNumber = 'Invalid GST format'
+      }
+      if (!form.address) newErrors.address = 'Address is required'
+      if (!form.city) newErrors.city = 'City is required'
+      if (!form.state) newErrors.state = 'State is required'
+      if (!/^\d{6}$/.test(form.pinCode)) newErrors.pinCode = 'PIN code must be 6 digits'
+    } else if (step === 5) {
+      if (form.password.length < 6) newErrors.password = 'Password must be at least 6 characters'
+      if (form.password !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
+      if (!agreeTerms) newErrors.agreeTerms = 'You must agree to the terms'
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 5))
+      setErrorMsg(null)
+    } else {
+      setErrorMsg('Please fix the errors before proceeding')
+    }
+  }
+
+  const prevStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1))
+    setErrorMsg(null)
   }
 
   const handleChange = (
@@ -86,7 +92,6 @@ export const Trans_Register = () => {
   ) => {
     const { name, value } = e.target
     setForm({ ...form, [name]: value })
-    // Clear error when user types
     if (errors[name]) {
       setErrors(prev => {
         const updated = { ...prev }
@@ -98,17 +103,7 @@ export const Trans_Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
-    
-    if (!validateForm()) {
-      setErrorMsg('Please fix the errors below')
-      return
-    }
-
-    if (!agreeTerms) {
-      setErrorMsg('Please accept Terms & Conditions')
-      return
-    }
+    if (!validateStep(5)) return
 
     try {
       await registerTransporter({
@@ -121,548 +116,313 @@ export const Trans_Register = () => {
             companyName: form.companyName,
             gstNumber: form.gstNumber,
             panNumber: form.panNumber,
-
-            businessType: form.businessType.toUpperCase(),
-            primaryVehicleType: form.primaryVehicleType.toUpperCase(),
-
-            yearsInBusiness: Number(form.yearsInBusiness),
+            businessType: form.businessType.toUpperCase() || 'PROPRIETORSHIP',
+            primaryVehicleType: form.primaryVehicleType.toUpperCase() || 'OPEN',
+            yearsInBusiness: Number(form.yearsInBusiness) || 0,
             businessAddress: {
               address: form.address,
               city: form.city,
               state: form.state,
               pinCode: form.pinCode,
             },
-            numberOfVehicles: Number(form.numberOfVehicles),
-            serviceAreas: form.serviceAreas.split(',').map((s) => s.trim()),
-
+            numberOfVehicles: Number(form.numberOfVehicles) || 0,
+            serviceAreas: form.serviceAreas.split(',').map((s) => s.trim()).filter(s => s),
             documents: {
               transportLicense: { url: 'pending' },
               vehicleRC: { url: 'pending' },
               insuranceCertificate: { url: 'pending' },
               panCard: { url: 'pending' },
             },
-
             password: form.password,
           },
         },
       })
-
-      toast.success('Registration successful. Await verification.')
+      toast.success('Registration successful.')
       navigate('/trans-login')
     } catch (err: any) {
-      console.error('Registration error:', err)
       setErrorMsg(err.message || 'Registration failed')
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <div className="py-3 sm:py-4 px-4 sm:px-6 shadow-md">
-        <div className="flex items-center gap-2 max-w-7xl mx-auto">
-          <Truck className="text-white" size={28} />
-          <h1 className="text-black text-xl sm:text-2xl font-bold">
-            INFi-<span className="font-bold text-amber-300">LOGISTICS</span>
+    <div className="min-h-screen relative flex items-center justify-center overflow-hidden font-sans">
+      {/* Background Image with subtle overlay for contrast */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000"
+        style={{ 
+          backgroundImage: 'url("/Trucks-port-containers.jpg")',
+          transform: 'scale(1.05)'
+        }}
+      />
+      <div className="absolute inset-0 z-0 bg-black/40 backdrop-blur-[1px]" />
+
+        {/* Branding (Moved to Top Left Corner) */}
+        <div className="absolute top-6 left-6 lg:top-10 lg:left-12 text-left animate-in fade-in slide-in-from-left duration-1000">
+          <h1 className="text-4xl lg:text-5xl font-black flex gap-0 leading-none">
+            <span 
+              className="text-white" 
+              style={{ WebkitTextStroke: '1.2px white', color: 'transparent' }}
+            >
+              IN
+            </span>
+            <span className="text-[#FFB800]">
+              FI
+            </span>
           </h1>
-        </div>
-      </div>
-
-      {/* Register Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="flex-1 flex items-center justify-center px-4 py-6 sm:py-8 md:py-12"
-      >
-        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 w-full max-w-5xl">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
-            Transporter Registration
+          <h2 className="text-[10px] lg:text-xs font-bold text-white tracking-[0.4em] uppercase mt-1 opacity-80">
+            Logistics
           </h2>
-          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 md:mb-8">
-            Join our logistics network and start transporting today
-          </p>
+          <div className="h-0.5 lg:h-[3px] w-10 lg:w-12 bg-[#FFB800] my-2 rounded-full" />
+      
+        </div>
+      {/* Main Content Container (Centered Form) */}
+      <div className="relative z-10 w-full max-w-[1400px] flex flex-col items-center justify-center px-4 py-20">
+        
 
-          {errorMsg && (
-            <div className="mb-8">
-                <Alert message={errorMsg} onClose={() => setErrorMsg(null)} />
-            </div>
-          )}
+        {/* Form Container (Widened and Centered) */}
+        <div className="w-full lg:w-[800px] animate-in fade-in slide-in-from-bottom-4 duration-1000 relative">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-8 lg:p-10 w-full relative">
+            
+            <h2 className="text-3xl font-bold mb-8 text-white text-center">Register</h2>
 
-          <div className="space-y-5 sm:space-y-6">
-            {/* Personal Information Section */}
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 pb-2 border-b-2 border-amber-300">
-                Personal Information
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-                {/* Full Name */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Full Name <span className="text-amber-300">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={form.fullName}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="Enter your full name"
-                    required
-                  />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="your.email@example.com"
-                    required
-                  />
-                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                </div>
-
-                {/* Phone Number */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={form.phoneNumber}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="+91 XXXXX XXXXX"
-                    required
-                  />
-                  {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
-                </div>
-
-                {/* Alternate Phone */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Alternate Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    name="alternatePhoneNumber"
-                    value={form.alternatePhoneNumber}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="+91 XXXXX XXXXX"
-                  />
-                  {errors.alternatePhoneNumber && <p className="text-red-500 text-xs mt-1">{errors.alternatePhoneNumber}</p>}
-                </div>
-              </div>
-            </div>
-
-            {/* Business Information Section */}
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 pb-2 border-b-2 border-amber-300">
-                Business Information
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-                {/* Company Name */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Company/Business Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="companyName"
-                    value={form.companyName}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="Enter company name"
-                  />
-                </div>
-
-                {/* GST Number */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    GST Number
-                  </label>
-                  <input
-                    type="text"
-                    name="gstNumber"
-                    value={form.gstNumber}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="22AAAAA0000A1Z5"
-                  />
-                  {errors.gstNumber && <p className="text-red-500 text-xs mt-1">{errors.gstNumber}</p>}
-                </div>
-
-                {/* PAN Number */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    PAN Number
-                  </label>
-                  <input
-                    type="text"
-                    name="panNumber"
-                    value={form.panNumber}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="ABCDE1234F"
-                  />
-                  {errors.panNumber && <p className="text-red-500 text-xs mt-1">{errors.panNumber}</p>}
-                </div>
-
-                {/* Business Type */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Business Type
-                  </label>
-                  <select
-                    name="businessType"
-                    value={form.businessType}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                  >
-                    <option value="">Select business type</option>
-                    <option value="proprietorship">Sole Proprietorship</option>
-                    <option value="partnership">Partnership</option>
-                    <option value="private_limited">Private Limited</option>
-                    <option value="public_limited">Public Limited</option>
-                    <option value="llp">LLP</option>
-                  </select>
-                </div>
-
-                {/* Years in Business */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Years in Business
-                  </label>
-                  <input
-                    type="number"
-                    name="yearsInBusiness"
-                    value={form.yearsInBusiness}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="0"
-                    min="0"
-                  />
-                </div>
-
-                {/* Business Address */}
-                <div className="lg:col-span-2">
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Business Address <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    name="address"
-                    value={form.address}
-                    onChange={handleChange}
-                    rows={3}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="Enter complete business address"
-                    required
-                  ></textarea>
-                </div>
-
-                {/* City */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    City <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={form.city}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="Enter city"
-                    required
-                  />
-                </div>
-
-                {/* State */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    State <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="state"
-                    value={form.state}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="Enter state"
-                    required
-                  />
-                </div>
-
-                {/* PIN Code */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    PIN Code <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="pinCode"
-                    value={form.pinCode}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="000000"
-                    required
-                  />
-                  {errors.pinCode && <p className="text-red-500 text-xs mt-1">{errors.pinCode}</p>}
-                </div>
-              </div>
-            </div>
-
-            {/* Fleet Information Section */}
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 pb-2 border-b-2 border-amber-300">
-                Fleet Information
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-                {/* Number of Vehicles */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Number of Vehicles
-                  </label>
-                  <input
-                    type="number"
-                    name="numberOfVehicles"
-                    value={form.numberOfVehicles}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="0"
-                    min="1"
-                  />
-                </div>
-
-                {/* Vehicle Types */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Primary Vehicle Type
-                  </label>
-                  <select
-                    name="primaryVehicleType"
-                    value={form.primaryVehicleType}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                  >
-                    <option value="">Select vehicle type</option>
-                    <option value="open">Open</option>
-                    <option value="trailer">Trailer</option>
-                    <option value="container">Container</option>
-                    <option value="refrigerated">Refer Vehicle/Cold Storage</option>
-                  </select>
-                </div>
-
-                {/* Service Areas */}
-                <div className="lg:col-span-2">
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Service Areas (Cities/States)
-                  </label>
-                  <textarea
-                    name="serviceAreas"
-                    value={form.serviceAreas}
-                    onChange={handleChange}
-                    rows={2}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent"
-                    placeholder="e.g., Delhi, Mumbai, Rajasthan, Gujarat"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-
-            {/* Documents Section */}
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 pb-2 border-b-2 border-amber-300">
-                Documents Upload
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-5">
-                {/* Transport License */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Transport License
-                  </label>
-                  <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-24 sm:h-28 md:h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                      <div className="flex flex-col items-center justify-center pt-4 pb-5 sm:pt-5 sm:pb-6">
-                        <Upload className="w-6 h-6 sm:w-8 sm:h-8 mb-1 sm:mb-2 text-gray-500" />
-                        <p className="text-xs sm:text-sm text-gray-500">Click to upload</p>
-                      </div>
-                      <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
-                    </label>
-                  </div>
-                </div>
-
-                {/* Vehicle RC */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Vehicle RC Copy
-                  </label>
-                  <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-24 sm:h-28 md:h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                      <div className="flex flex-col items-center justify-center pt-4 pb-5 sm:pt-5 sm:pb-6">
-                        <Upload className="w-6 h-6 sm:w-8 sm:h-8 mb-1 sm:mb-2 text-gray-500" />
-                        <p className="text-xs sm:text-sm text-gray-500">Click to upload</p>
-                      </div>
-                      <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
-                    </label>
-                  </div>
-                </div>
-
-                {/* Insurance */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Insurance Certificate
-                  </label>
-                  <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-24 sm:h-28 md:h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                      <div className="flex flex-col items-center justify-center pt-4 pb-5 sm:pt-5 sm:pb-6">
-                        <Upload className="w-6 h-6 sm:w-8 sm:h-8 mb-1 sm:mb-2 text-gray-500" />
-                        <p className="text-xs sm:text-sm text-gray-500">Click to upload</p>
-                      </div>
-                      <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
-                    </label>
-                  </div>
-                </div>
-
-                {/* PAN Card */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    PAN Card
-                  </label>
-                  <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-24 sm:h-28 md:h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                      <div className="flex flex-col items-center justify-center pt-4 pb-5 sm:pt-5 sm:pb-6">
-                        <Upload className="w-6 h-6 sm:w-8 sm:h-8 mb-1 sm:mb-2 text-gray-500" />
-                        <p className="text-xs sm:text-sm text-gray-500">Click to upload</p>
-                      </div>
-                      <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Account Security Section */}
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 pb-2 border-b-2 border-amber-300">
-                Account Security
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-                {/* Password */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Password <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      value={form.password}
-                      onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent pr-10 sm:pr-12"
-                      placeholder="Create a strong password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showPassword ? (
-                        <EyeOff size={18} className="sm:w-5 sm:h-5" />
-                      ) : (
-                        <Eye size={18} className="sm:w-5 sm:h-5" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-                </div>
-
-                {/* Confirm Password */}
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">
-                    Confirm Password <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      name="confirmPassword"
-                      value={form.confirmPassword}
-                      onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent pr-10 sm:pr-12"
-                      placeholder="Re-enter password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff size={18} className="sm:w-5 sm:h-5 cursor-pointer" />
-                      ) : (
-                        <Eye size={18} className="sm:w-5 sm:h-5 cursor-pointer" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
-                </div>
-              </div>
-            </div>
-
-            {/* Terms and Conditions */}
-            <div className="flex items-start">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 border-gray-300 rounded focus:ring-amber-300 mt-0.5 sm:mt-1"
+            {/* Redesigned Steps Indicator */}
+            <div className="flex items-center justify-between mb-12 relative px-4">
+              
+              
+              {/* active progress line */}
+              <div 
+                className="absolute top-5 left-10 h-[2px] bg-gradient-to-r from-amber-500 to-yellow-300 -z-0 transition-all duration-700 ease-in-out shadow-[0_0_10px_rgba(245,158,11,0.5)]" 
+                style={{ 
+                  width: `calc(${((currentStep - 1) / (STEPS.length - 1)) * 100}% - ${currentStep === 1 ? '0px' : '20px'})`,
+                  maxWidth: 'calc(100% - 80px)'
+                }}
               />
-              <label htmlFor="terms" className="ml-2 sm:ml-3 text-sm sm:text-base text-gray-600">
-                I agree to the{' '}
-                <a href="#" className="text-orange-500 hover:text-orange-600 font-medium">
-                  Terms and Conditions
-                </a>{' '}
-                and{' '}
-                <a href="#" className="text-orange-500 hover:text-orange-600 font-medium">
-                  Privacy Policy
-                </a>
-              </label>
+
+              {STEPS.map((step, index) => {
+                const Icon = step.icon
+                const isActive = currentStep === step.id
+                const isCompleted = currentStep > step.id
+                const isPast = currentStep > step.id
+                
+                return (
+                  <div key={step.id} className="relative z-10 flex flex-col items-center flex-1">
+                    <div className={`
+                      group relative flex items-center justify-center
+                      w-10 h-10 rounded-xl border transition-all duration-500
+                      ${isCompleted ? 'bg-amber-500 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] text-white' : 
+                        isActive ? 'bg-white/10 border-amber-500/50 text-amber-500 scale-110 shadow-[0_0_20px_rgba(255,255,255,0.1)]' : 
+                        'bg-white/5 border-white/10 text-white/20'}
+                    `}>
+                      {isCompleted ? (
+                        <CheckCircle2 size={18} strokeWidth={2.5} />
+                      ) : (
+                        <div className="relative">
+                          <Icon size={18} className={`${isActive ? 'opacity-100' : 'opacity-40'}`} />
+                          <span className={`
+                            absolute -top-1 -right-2 w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center
+                            ${isActive ? 'bg-amber-500 text-white' : 'bg-white/10 text-white/40'}
+                          `}>
+                            {step.id}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Active Ring Pulse */}
+                      {isActive && (
+                        <div className="absolute inset-0 rounded-xl border-2 border-amber-500/30 animate-ping opacity-75" />
+                      )}
+                    </div>
+
+                    {/* Always visible label */}
+                    <div className="mt-3 flex flex-col items-center">
+                      <span className={`
+                        text-[9px] font-black uppercase tracking-[0.2em] transition-colors duration-300
+                        ${isActive ? 'text-amber-500' : isCompleted ? 'text-white/80' : 'text-white/20'}
+                      `}>
+                        {step.title}
+                      </span>
+                      {isActive && (
+                        <div className="h-1 w-1 bg-amber-500 rounded-full mt-1 animate-bounce" />
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
-            {/* Submit Button */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 bg-amber-500 text-white py-2.5 sm:py-3 md:py-3.5 rounded-md font-medium hover:bg-amber-600 transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0"
-              >
-                {loading ? <div className="scale-50 h-10"><Loader /></div> : 'Register as Transporter'}
-              </button>
-              <a
-                href="/trans-login"
-                className="flex-1 bg-gray-200 text-gray-700 py-2.5 sm:py-3 md:py-3.5 rounded-md font-medium hover:bg-gray-300 transition-colors text-sm sm:text-base text-center flex items-center justify-center gap-2"
-              >
-                <ChevronLeft size={18} />
-                Back to Login
-              </a>
+            {errorMsg && (
+              <div className="mb-6 animate-shake">
+                <Alert message={errorMsg} onClose={() => setErrorMsg(null)} />
+              </div>
+            )}
+
+            <div className="max-h-[450px] overflow-y-auto custom-scrollbar pr-2 -mr-2 mb-8">
+              {currentStep === 1 && (
+                <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                  <InputGroup label="Full Name *" name="fullName" value={form.fullName} onChange={handleChange} placeholder="John Doe" error={errors.fullName} />
+                  <InputGroup label="Email Address *" type="email" name="email" value={form.email} onChange={handleChange} placeholder="Your email" error={errors.email} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <InputGroup label="Phone *" type="tel" name="phoneNumber" value={form.phoneNumber} onChange={handleChange} placeholder="10 Digits" error={errors.phoneNumber} />
+                    <InputGroup label="Alt Phone" type="tel" name="alternatePhoneNumber" value={form.alternatePhoneNumber} onChange={handleChange} placeholder="Optional" error={errors.alternatePhoneNumber} />
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 2 && (
+                <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                  <InputGroup label="Company Name *" name="companyName" value={form.companyName} onChange={handleChange} placeholder="Logistics Co." error={errors.companyName} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <InputGroup label="GST Number" name="gstNumber" value={form.gstNumber} onChange={handleChange} placeholder="Optional" error={errors.gstNumber} />
+                    <InputGroup label="PAN Number" name="panNumber" value={form.panNumber} onChange={handleChange} placeholder="ABCDE1234F" error={errors.panNumber} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <SelectGroup label="Business Type" name="businessType" value={form.businessType} onChange={handleChange} options={[
+                      { label: 'Sole Proprietorship', value: 'proprietorship' },
+                      { label: 'Partnership', value: 'partnership' },
+                      { label: 'Private Limited', value: 'private_limited' },
+                      { label: 'LLP', value: 'llp' },
+                    ]} />
+                    <InputGroup label="Years" type="number" name="yearsInBusiness" value={form.yearsInBusiness} onChange={handleChange} placeholder="0" />
+                  </div>
+                  <InputGroup label="Address *" name="address" value={form.address} onChange={handleChange} placeholder="Registered Address" error={errors.address} isTextArea rows={2} />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <InputGroup label="City *" name="city" value={form.city} onChange={handleChange} error={errors.city} />
+                    <InputGroup label="State *" name="state" value={form.state} onChange={handleChange} error={errors.state} />
+                    <InputGroup label="PIN *" name="pinCode" value={form.pinCode} onChange={handleChange} error={errors.pinCode} />
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 3 && (
+                <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <InputGroup label="Vehicles" type="number" name="numberOfVehicles" value={form.numberOfVehicles} onChange={handleChange} placeholder="0" />
+                    <SelectGroup label="Primary Type" name="primaryVehicleType" value={form.primaryVehicleType} onChange={handleChange} options={[
+                      { label: 'Open', value: 'open' },
+                      { label: 'Trailer', value: 'trailer' },
+                      { label: 'Container', value: 'container' },
+                      { label: 'Refrigerated', value: 'refrigerated' },
+                    ]} />
+                  </div>
+                  <InputGroup label="Service Areas" name="serviceAreas" value={form.serviceAreas} onChange={handleChange} placeholder="Delhi, Mumbai..." isTextArea rows={3} />
+                </div>
+              )}
+
+              {currentStep === 4 && (
+                <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <DocUpload label="License" />
+                    <DocUpload label="Vehicle RC" />
+                    <DocUpload label="Insurance" />
+                    <DocUpload label="PAN Card" />
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 5 && (
+                <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                  <PasswordInput label="Password *" name="password" value={form.password} onChange={handleChange} show={showPassword} toggle={() => setShowPassword(!showPassword)} error={errors.password} />
+                  <PasswordInput label="Confirm Password *" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} show={showConfirmPassword} toggle={() => setShowConfirmPassword(!showConfirmPassword)} error={errors.confirmPassword} />
+                  
+                  <label className="flex items-center gap-3 cursor-pointer group mt-6">
+                    <input 
+                      type="checkbox" 
+                      checked={agreeTerms} 
+                      onChange={(e) => setAgreeTerms(e.target.checked)} 
+                      className="w-4 h-4 appearance-none bg-white/10 border border-white/30 rounded checked:bg-[#FFB800] checked:border-[#FFB800] transition-all cursor-pointer relative checked:after:content-['✓'] checked:after:absolute checked:after:text-white checked:after:text-[10px] checked:after:font-bold checked:after:left-1/2 checked:after:top-1/2 checked:after:-translate-x-1/2 checked:after:-translate-y-1/2" 
+                    />
+                    <span className="text-xs text-white/60 group-hover:text-white transition-colors">
+                      Accept <a href="#" className="text-[#FFB800] font-bold hover:underline">Terms & Privacy</a>.
+                    </span>
+                  </label>
+                  {errors.agreeTerms && <p className="text-red-400 text-[10px] mt-1 font-bold">{errors.agreeTerms}</p>}
+                </div>
+              )}
             </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              {currentStep > 1 && (
+                <button onClick={prevStep} className="flex-1 flex items-center justify-center gap-1 py-3 px-6 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold transition-all border border-white/10 text-sm">
+                  <ChevronLeft size={16} /> Back
+                </button>
+              )}
+              
+              {currentStep < 5 ? (
+                <button onClick={nextStep} className={`flex-[2] flex items-center justify-center gap-1 py-3 px-6 bg-[#FF9900] hover:bg-[#FF8800] text-white rounded-lg font-bold transition-all shadow-lg shadow-amber-500/20 text-sm ${currentStep === 1 ? 'w-full' : ''}`}>
+                  Continue <ChevronRight size={16} />
+                </button>
+              ) : (
+                <button onClick={handleSubmit} disabled={loading} className="flex-[2] flex items-center justify-center gap-1 py-3 px-6 bg-[#FF9900] hover:bg-[#FF8800] text-white rounded-lg font-bold transition-all shadow-lg shadow-amber-500/20 text-sm disabled:opacity-50">
+                  {loading ? 'Processing...' : 'Complete Registration'}
+                </button>
+              )}
+            </div>
+
+            <p className="text-white/60 text-sm text-center">
+              Already have an account? <a href="/trans-login" className="text-amber-400 font-bold hover:underline ml-1">Login</a>
+            </p>
           </div>
         </div>
-      </form>
-
-      {/* Footer */}
-      <div className="bg-white border-t border-gray-200 py-3 sm:py-4 px-4 sm:px-6 text-center text-xs sm:text-sm text-gray-600">
-        <p className="break-words">
-          Copyright 2025 © Created By INFi-Logistics, All Rights Reserved.
-        </p>
       </div>
+
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+      `}</style>
     </div>
   )
 }
+
+const InputGroup = ({ label, type = 'text', name, value, onChange, placeholder, error, isTextArea, rows = 3 }: any) => (
+  <div className="flex flex-col gap-2">
+    <label className="text-[10px] uppercase font-bold tracking-widest text-white/50">{label}</label>
+    {isTextArea ? (
+      <textarea name={name} value={value} onChange={onChange} rows={rows} placeholder={placeholder} className={`w-full bg-white/20 border ${error ? 'border-red-500/50' : 'border-white/30'} rounded-lg px-5 py-4 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all resize-none font-medium text-sm`} />
+    ) : (
+      <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder} className={`w-full bg-white/20 border ${error ? 'border-red-500/50' : 'border-white/30'} rounded-lg px-5 py-4 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all font-medium`} />
+    )}
+    {error && <p className="text-red-400 text-[10px] font-bold uppercase tracking-tight ml-2">{error}</p>}
+  </div>
+)
+
+const SelectGroup = ({ label, name, value, onChange, options }: any) => (
+  <div className="flex flex-col gap-2">
+    <label className="text-[10px] uppercase font-bold tracking-widest text-white/50">{label}</label>
+    <div className="relative">
+      <select name={name} value={value} onChange={onChange} className="w-full bg-white/20 border border-white/30 rounded-lg px-5 py-4 text-white appearance-none focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all font-medium">
+        <option value="" className="bg-gray-900">Select...</option>
+        {options.map((opt: any) => <option key={opt.value} value={opt.value} className="bg-gray-900">{opt.label}</option>)}
+      </select>
+      <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-white/30">▼</div>
+    </div>
+  </div>
+)
+
+const PasswordInput = ({ label, name, value, onChange, show, toggle, error }: any) => (
+  <div className="flex flex-col gap-2">
+    <label className="text-[10px] uppercase font-bold tracking-widest text-white/50">{label}</label>
+    <div className="relative">
+      <input type={show ? 'text' : 'password'} name={name} value={value} onChange={onChange} placeholder="••••••••" className={`w-full bg-white/20 border ${error ? 'border-red-400/50' : 'border-white/30'} rounded-lg px-5 py-4 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all pr-12 font-medium`} />
+      <button type="button" onClick={toggle} className="absolute right-5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">{show ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+    </div>
+    {error && <p className="text-red-400 text-[10px] font-bold uppercase tracking-tight ml-2">{error}</p>}
+  </div>
+)
+
+const DocUpload = ({ label }: any) => (
+  <label className="flex flex-col items-center justify-center gap-3 p-6 bg-white/5 border-2 border-dashed border-white/10 hover:border-amber-500/50 hover:bg-white/10 rounded-2xl cursor-pointer transition-all group">
+    <div className="p-3 bg-white/5 rounded-xl text-white/30 group-hover:text-amber-500 transition-colors">
+      <Upload size={24} />
+    </div>
+    <div className="text-center">
+      <p className="text-xs font-bold text-white uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-[10px] text-white/30">Click to upload scan</p>
+    </div>
+    <input type="file" className="hidden" />
+  </label>
+)

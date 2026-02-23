@@ -11,7 +11,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const client = useApolloClient()
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const transporterToken = localStorage.getItem('transporterToken')
+    const adminToken = localStorage.getItem('token')
+    const token = transporterToken || adminToken
 
     if (!token) {
       Promise.resolve().then(() => setLoading(false))
@@ -19,7 +21,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     client
-      .query<{ me: User }>({ query: ME_QUERY })
+      .query<{ me: User }>({ 
+        query: ME_QUERY,
+        context: {
+          headers: {
+            authorization: `Bearer ${token}`
+          }
+        }
+      })
       .then(({ data }) => {
         if (data?.me) {
           setUser(data.me)
@@ -28,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })
       .catch(() => {
         localStorage.removeItem('token')
+        localStorage.removeItem('transporterToken')
       })
       .finally(() => {
         setLoading(false)
@@ -35,16 +45,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [client])
 
   const login = (token: string, userData: User) => {
-    localStorage.setItem('token', token)
+    const isTransporter = userData.roles.includes('TRANSPORTER')
+    if (isTransporter) {
+      localStorage.setItem('transporterToken', token)
+      localStorage.removeItem('token') // Ensure no conflict
+    } else {
+      localStorage.setItem('token', token)
+      localStorage.removeItem('transporterToken')
+    }
     setUser(userData)
     setRole(userData.roles[0])
   }
 
   const logout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('transporterToken')
+    localStorage.removeItem('role')
     setUser(null)
     client.resetStore()
   }
+
 
   return (
     <AuthContext.Provider value={{ user, role, login, logout, loading }}>

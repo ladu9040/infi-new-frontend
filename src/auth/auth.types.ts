@@ -20,8 +20,9 @@ export interface Documents {
 
 export interface User {
   id: string
-  name: string
+  name?: string
   fullName?: string
+
   email: string
   phoneNumber?: string
   alternatePhoneNumber?: string | null

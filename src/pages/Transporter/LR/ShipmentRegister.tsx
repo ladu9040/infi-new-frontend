@@ -4,6 +4,8 @@ import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { UploadPODModal } from './UploadPODModal';
 import { InvoiceGeneratorModal } from './InvoiceGeneratorModal';
+import Loader from '../../../components/common/Loader';
+
 
 const GET_ALL_LRS = gql`
   query GetAllLRs {
@@ -54,7 +56,7 @@ export const ShipmentRegister = ({ onGenerateLR }: { onGenerateLR: () => void })
     fetchPolicy: 'network-only'
   });
 
-  if (loading) return <div className="p-6 text-center text-gray-500">Loading shipments...</div>;
+  if (loading) return <div className="p-12 text-center text-amber-600 font-medium">Loading shipments...</div>;
   if (error) return <div className="p-6 text-center text-red-500">Error loading shipments: {error.message}</div>;
 
   const lrs: LR[] = data?.getAllLRs || [];

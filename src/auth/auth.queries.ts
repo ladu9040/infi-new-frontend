@@ -4,8 +4,8 @@ export const ME_QUERY = gql`
   query Me {
     me {
       id
-      name
       fullName
+
       email
       phoneNumber
       alternatePhoneNumber
@@ -21,8 +21,8 @@ export const ME_QUERY = gql`
         pinCode
       }
       numberOfVehicles
-      primaryVehicleType
       serviceAreas
+
       documents {
         transportLicense { url uploadedAt verified }
         vehicleRC { url uploadedAt verified }

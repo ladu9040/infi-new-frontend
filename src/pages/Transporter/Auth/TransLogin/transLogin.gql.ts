@@ -6,7 +6,6 @@ export const TRANSPORTER_LOGIN_MUTATION = gql`
       token
       transporter {
         id
-        name
         fullName
         email
         phoneNumber
@@ -23,7 +22,6 @@ export const TRANSPORTER_LOGIN_MUTATION = gql`
           pinCode
         }
         numberOfVehicles
-        primaryVehicleType
         serviceAreas
         documents {
           transportLicense { url uploadedAt verified }

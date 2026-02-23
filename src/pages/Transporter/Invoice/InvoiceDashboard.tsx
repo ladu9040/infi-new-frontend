@@ -64,10 +64,11 @@ export const InvoiceDashboard = () => {
     }, [invoices, searchQuery, startDate, endDate]);
 
     if (loading) return (
-        <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+        <div className="flex items-center justify-center h-64 text-amber-600 font-medium">
+            Loading invoices...
         </div>
     );
+
 
     if (error) return (
         <div className="text-center text-red-500 p-8">
@@ -189,10 +190,11 @@ export const InvoiceDashboard = () => {
                                                 title="Download PDF"
                                             >
                                                 {downloadingId === invoice.lrId ? (
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <span className="text-[10px] animate-pulse">...</span>
                                                 ) : (
                                                     <Download className="w-4 h-4" />
                                                 )}
+
                                             </button>
                                         </td>
                                     </tr>

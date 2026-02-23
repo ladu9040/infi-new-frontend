@@ -74,12 +74,72 @@ export const SIDEBAR_ITEMS = [
   { name: 'Profile', icon: Users },
 ]
 
+import { useQuery } from '@apollo/client/react'
+import { gql } from '@apollo/client'
+
+const GET_ALL_INDENTS = gql`
+  query GetAllTransporterIndents {
+    getAllTransporterIndents {
+      id
+      indentId
+      customerName
+      vehicleType
+      status
+      createdAt
+    }
+  }
+`;
+
+const GET_ALL_LRS = gql`
+  query GetAllLRs {
+    getAllLRs {
+      id
+      lrNumber
+      indentId
+      status
+      freightRate
+    }
+  }
+`;
+
+interface Indent {
+  id: string;
+  indentId: string;
+  customerName: string;
+  vehicleType: string;
+  status: string;
+  createdAt: string;
+}
+
+interface IndentsData {
+  getAllTransporterIndents: Indent[];
+}
+
+interface LR {
+  id: string;
+  lrNumber: string;
+  indentId: string;
+  status: string;
+  freightRate: number;
+}
+
+interface LRsData {
+  getAllLRs: LR[];
+}
+
 export const Trans_DashBoard = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const authContext = useContext(AuthContext)
   const user = authContext?.user
   const logout = authContext?.logout
+
+  const { data: indentData } = useQuery<IndentsData>(GET_ALL_INDENTS, {
+    fetchPolicy: 'network-only'
+  })
+  const { data: lrData } = useQuery<LRsData>(GET_ALL_LRS, {
+    fetchPolicy: 'network-only'
+  })
 
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -95,6 +155,21 @@ export const Trans_DashBoard = () => {
   const [showCreateLRModal, setShowCreateLRModal] = useState(false)
 
   const isExpanded = sidebarHovered
+
+  // Process Stats
+  const indents = indentData?.getAllTransporterIndents || []
+  const lrs = lrData?.getAllLRs || []
+  const pendingIndents = indents.filter((i: any) => i.status === 'PENDING')
+  
+  const stats = {
+    totalRoutes: indents.length,
+    onTimePercentage: "94%", // Mock for now
+    totalShipments: lrs.length,
+    totalFreight: lrs.reduce((acc: number, curr: any) => acc + (curr.freightRate || 0), 0),
+    pendingOrdersCount: pendingIndents.length,
+    pendingIndents: pendingIndents.slice(0, 8),
+    recentIndents: indents.slice(0, 3)
+  }
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -162,11 +237,6 @@ export const Trans_DashBoard = () => {
 
                 {/* Label */}
                 {isExpanded && <span className="ml-3 whitespace-nowrap text-sm">{item.name}</span>}
-
-                {/* Active indicator (collapsed state) */}
-                {!isExpanded && isActive && (
-                  <span className="absolute right-2 w-2 h-2 bg-amber-600 rounded-full" />
-                )}
               </button>
             )
           })}
@@ -281,7 +351,7 @@ export const Trans_DashBoard = () => {
         </header>
 
         <main className="p-6 overflow-y-auto bg-gray-50 flex-1">
-          {activeTab === 'Dashboard' && <DashboardContent />}
+          {activeTab === 'Dashboard' && <DashboardContent stats={stats} user={user} />}
 
           {activeTab === 'Vehicle Allocation' && (
               <VehicleAllocationList 

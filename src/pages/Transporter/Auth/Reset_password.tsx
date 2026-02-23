@@ -229,7 +229,7 @@ export const Trans_ForgotPassword = () => {
                   disabled={sendingOtp}
                   className="w-full bg-amber-500 cursor-pointer text-white py-3.5 rounded-md font-medium hover:bg-amber-600 transition-colors text-base flex items-center justify-center p-0"
                 >
-                  {sendingOtp ? <div className="scale-40 h-10"><Loader /></div> : 'Send OTP'}
+                  {sendingOtp ? 'Sending OTP...' : 'Send OTP'}
                 </button>
 
                 <div className="text-center">
@@ -406,7 +406,7 @@ export const Trans_ForgotPassword = () => {
                   disabled={resettingPassword}
                   className="w-full bg-amber-500 text-white py-3.5 rounded-md font-medium hover:bg-amber-600 transition-colors text-base flex items-center justify-center p-0"
                 >
-                  {resettingPassword ? <div className="scale-40 h-10"><Loader /></div> : 'Reset Password'}
+                  {resettingPassword ? 'Resetting Password...' : 'Reset Password'}
                 </button>
               </div>
             </>

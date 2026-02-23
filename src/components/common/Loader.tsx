@@ -4,11 +4,12 @@ import styled from 'styled-components';
 interface LoaderProps {
   className?: string
   style?: React.CSSProperties
+  variant?: 'default' | 'centered' | 'bottom'
 }
 
-const Loader = ({ className, style }: LoaderProps) => {
+const Loader = ({ className, style, variant = 'default' }: LoaderProps) => {
   return (
-    <StyledWrapper className={className} style={style}>
+    <StyledWrapper className={`${className} ${variant}`} style={style}>
       <div className="loader">
         <div className="truckWrapper">
           <div className="truckBody">
@@ -51,6 +52,27 @@ const Loader = ({ className, style }: LoaderProps) => {
 }
 
 const StyledWrapper = styled.div`
+  &.centered {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 9999;
+  }
+
+  &.bottom {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+  }
+
   .loader {
     width: fit-content;
     height: fit-content;
@@ -150,6 +172,7 @@ const StyledWrapper = styled.div`
     100% {
       transform: translateX(-350px);
     }
-  }`;
+  }
+`;
 
 export default Loader;

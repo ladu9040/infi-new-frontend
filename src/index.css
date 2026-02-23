@@ -1,1 +1,28 @@
 @import "tailwindcss";
+
+/* Global Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.4); /* amber-500 with opacity */
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.8); /* amber-500 */
+}
+
+/* Firefox support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.4) rgba(0, 0, 0, 0.05);
+}
