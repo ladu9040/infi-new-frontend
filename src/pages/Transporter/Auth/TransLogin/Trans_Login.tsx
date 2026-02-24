@@ -112,12 +112,17 @@ export const Trans_Login = () => {
   }
 
   return (
-    <div 
-      className="min-h-screen flex flex-col bg-cover bg-center bg-no-repeat relative"
-      style={{ backgroundImage: "url('/Trucks-port-containers.jpg')" }}
-    >
-      {/* Overlay to ensure readability and mood */}
-      <div className="absolute inset-0 bg-black/30" />
+    <div className="min-h-screen relative flex flex-col overflow-hidden">
+      {/* Background Image Layer */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url("/Trucks-port-containers.jpg")' }}
+      />
+      
+      {/* Gradient Overlay */}
+      <div 
+        className="absolute inset-0 z-0 bg-gradient-to-br from-yellow-400 via-yellow-200/90 to-transparent"
+      />
 
       {/* Content Container */}
       <div className="flex-1 flex flex-col md:flex-row items-center justify-center relative z-10 px-4 md:px-24 gap-12">
@@ -127,27 +132,27 @@ export const Trans_Login = () => {
           <h1 className="text-[22rem] -ml-3 md:text-[13rem] font-black flex flex-wrap justify-center md:justify-start gap-0 leading-tight">
             <span 
               className="text-transparent" 
-              style={{ WebkitTextStroke: '2px white' }}
+              style={{ WebkitTextStroke: '4px black' }}
             >
               IN
             </span>
-            <span className="bg-gradient-to-r from-amber-300 to-yellow-500 bg-clip-text text-transparent">
+            <span className="text-white">
               FI
             </span>
           </h1>
-          <h2 className="text-2xl md:text-4xl  font-bold text-white tracking-[0.3em] uppercase mt-2 opacity-90">
+          <h2 className="text-2xl md:text-4xl font-bold text-black tracking-[0.3em] uppercase mt-2 opacity-90">
             Logistics
           </h2>
-          <div className="h-1  w-24 bg-amber-400 my-6 mx-auto md:mx-0 rounded-full" />
-          <p className="text-lg md:text-xl text-white/80 max-w-md font-medium italic leading-relaxed">
+          <div className="h-1 w-24 bg-black my-6 mx-auto md:mx-0 rounded-full" />
+          <p className="text-lg md:text-xl text-black/80 max-w-md font-medium italic leading-relaxed">
             "Seamless Logistics, Boundless Reach. Delivering Excellence to Your Doorstep, Every Single Mile."
           </p>
         </div>
 
         {/* Login Form (Right Side) */}
         <form onSubmit={handleSubmit} className="w-full max-w-lg">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-10 w-full">
-            <h2 className="text-3xl font-bold mb-6 text-white text-center">Login</h2>
+          <div className="bg-white rounded-2xl shadow-2xl p-10 w-full border border-gray-100">
+            <h2 className="text-3xl font-bold mb-6 text-gray-900 text-center">Login</h2>
 
             {errorMsg && (
               <div className="mb-6">
@@ -157,20 +162,20 @@ export const Trans_Login = () => {
 
             {/* Email */}
             <div className="mb-6">
-              <label className="block mb-2 font-medium text-white">Email *</label>
+              <label className="block mb-2 font-semibold text-gray-800">Email *</label>
               <input
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
                 placeholder="Your email"
-                className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg focus:ring-2 focus:ring-amber-300 outline-none text-white placeholder-white/60 transition-all font-medium"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-gray-900 placeholder-gray-400 transition-all font-medium"
               />
             </div>
 
             {/* Password */}
             <div className="mb-6">
-              <label className="block mb-2 font-medium text-white">Password *</label>
+              <label className="block mb-2 font-semibold text-gray-800">Password *</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -178,12 +183,12 @@ export const Trans_Login = () => {
                   value={form.password}
                   onChange={handleChange}
                   placeholder="Your password"
-                  className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg pr-12 focus:ring-2 focus:ring-amber-300 outline-none text-white placeholder-white/60 transition-all font-medium"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg pr-12 focus:ring-2 focus:ring-yellow-500 outline-none text-gray-900 placeholder-gray-400 transition-all font-medium"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -192,17 +197,17 @@ export const Trans_Login = () => {
 
             {/* Remember me & Forgot Password */}
             <div className="flex items-center justify-between mb-8">
-              <label className="flex items-center text-white text-sm cursor-pointer">
+              <label className="flex items-center text-gray-700 text-sm cursor-pointer font-medium">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="mr-2 w-4 h-4 appearance-none bg-white/10 border border-white/30 rounded checked:bg-amber-500 checked:border-amber-500 transition-all cursor-pointer relative checked:after:content-['✓'] checked:after:absolute checked:after:text-white checked:after:text-[10px] checked:after:font-bold checked:after:left-1/2 checked:after:top-1/2 checked:after:-translate-x-1/2 checked:after:-translate-y-1/2"
+                  className="mr-2 w-4 h-4 appearance-none bg-white border border-gray-300 rounded checked:bg-yellow-500 checked:border-yellow-500 transition-all cursor-pointer relative checked:after:content-['✓'] checked:after:absolute checked:after:text-white checked:after:text-[10px] checked:after:font-bold checked:after:left-1/2 checked:after:top-1/2 checked:after:-translate-x-1/2 checked:after:-translate-y-1/2"
                 />
 
                 Remember me
               </label>
-              <a href="/trans-forget-pass" className="text-sm text-amber-300 hover:text-amber-400 font-medium transition-colors">
+              <a href="/trans-forget-pass" className="text-sm text-yellow-700 hover:text-yellow-800 font-bold transition-colors">
                 Forgot Password?
               </a>
             </div>
@@ -211,15 +216,15 @@ export const Trans_Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-amber-500 text-white py-3.5 rounded-lg font-bold hover:bg-amber-600 active:scale-[0.98] transition-all flex items-center justify-center shadow-lg shadow-amber-500/20"
+              className="w-full bg-gray-900 text-white py-3.5 rounded-lg font-bold hover:bg-black active:scale-[0.98] transition-all flex items-center justify-center shadow-lg shadow-black/10"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
 
 
-            <p className="text-center mt-6 text-white/80">
+            <p className="text-center mt-6 text-gray-600 font-medium">
               Don’t have an account?{' '}
-              <a href="/trans-register" className="text-amber-300 hover:text-amber-400 font-bold ml-1 transition-colors">
+              <a href="/trans-register" className="text-yellow-700 hover:text-yellow-800 font-bold ml-1 transition-colors">
                 Register
               </a>
             </p>

@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext'
 import { client } from './lib/apollo'
 import { Trans_Login } from './pages/Transporter/Auth/TransLogin/Trans_Login'
 import { Trans_Register } from './pages/Transporter/Auth/TransRegister/Trans_Register'
+import TransIntro from './pages/Transporter/Auth/TransIntro/TransIntro'
 import { Trans_ForgotPassword } from './pages/Transporter/Auth/Reset_password'
 import { CreateQuotation } from './pages/Transporter/Quotation/createQuotation/createQuotation'
 import { QuotationList } from './pages/Transporter/Quotation/QuotationList/quotationList'
@@ -22,6 +23,7 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/trans-login" replace />} />
       <Route path="/trans-login" element={<Trans_Login />} />
       <Route path="/trans-register" element={<Trans_Register />} />
+      <Route path="/trans-intro" element={<TransIntro />} />
       <Route path="/trans-forget-pass" element={<Trans_ForgotPassword />} />
       <Route path="/no-access" element={<NoAccess />} />
       <Route path="/agreement" element={<Agreement />} />

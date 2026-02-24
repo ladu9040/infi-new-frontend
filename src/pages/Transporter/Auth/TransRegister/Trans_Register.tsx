@@ -137,8 +137,8 @@ export const Trans_Register = () => {
           },
         },
       })
-      toast.success('Registration successful.')
-      navigate('/trans-login')
+      toast.success('Registration successful!');
+      navigate('/trans-intro');
     } catch (err: any) {
       setErrorMsg(err.message || 'Registration failed')
     }
@@ -146,44 +146,45 @@ export const Trans_Register = () => {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center overflow-hidden font-sans">
-      {/* Background Image with subtle overlay for contrast */}
+      {/* Background Image Layer */}
       <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000"
-        style={{ 
-          backgroundImage: 'url("/Trucks-port-containers.jpg")',
-          transform: 'scale(1.05)'
-        }}
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url("/Trucks-port-containers.jpg")' }}
       />
-      <div className="absolute inset-0 z-0 bg-black/40 backdrop-blur-[1px]" />
+      
+      {/* Gradient Overlay */}
+      <div 
+        className="absolute inset-0 z-0 bg-gradient-to-br from-yellow-400 via-yellow-200/90 to-transparent"
+      />
+      {/* Background Image elements removed for gradient alignment */}
 
-        {/* Branding (Moved to Top Left Corner) */}
+        {/* Branding (Top Left Corner) */}
         <div className="absolute top-6 left-6 lg:top-10 lg:left-12 text-left animate-in fade-in slide-in-from-left duration-1000">
           <h1 className="text-4xl lg:text-5xl font-black flex gap-0 leading-none">
             <span 
-              className="text-white" 
-              style={{ WebkitTextStroke: '1.2px white', color: 'transparent' }}
+              className="text-transparent" 
+              style={{ WebkitTextStroke: '1.2px black' }}
             >
               IN
             </span>
-            <span className="text-[#FFB800]">
+            <span className="text-white">
               FI
             </span>
           </h1>
-          <h2 className="text-[10px] lg:text-xs font-bold text-white tracking-[0.4em] uppercase mt-1 opacity-80">
+          <h2 className="text-[10px] lg:text-xs font-bold text-black tracking-[0.4em] uppercase mt-1 opacity-80">
             Logistics
           </h2>
-          <div className="h-0.5 lg:h-[3px] w-10 lg:w-12 bg-[#FFB800] my-2 rounded-full" />
-      
+          <div className="h-0.5 lg:h-[3px] w-10 lg:w-12 bg-black my-2 rounded-full" />
         </div>
       {/* Main Content Container (Centered Form) */}
-      <div className="relative z-10 w-full max-w-[1400px] flex flex-col items-center justify-center px-4 py-20">
+      <div className="relative z-10 w-full max-w-[1400px] flex flex-col items-center justify-center px-4 py-12">
         
 
-        {/* Form Container (Widened and Centered) */}
-        <div className="w-full lg:w-[800px] animate-in fade-in slide-in-from-bottom-4 duration-1000 relative">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-8 lg:p-10 w-full relative">
+        {/* Form Container (Widened and Centered - Minimalistic Design) */}
+        <div className="w-full lg:w-[1000px] animate-in fade-in slide-in-from-bottom-4 duration-1000 relative">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-14 w-full relative border border-gray-100">
             
-            <h2 className="text-3xl font-bold mb-8 text-white text-center">Register</h2>
+            <h2 className="text-4xl font-light mb-12 text-gray-900 text-center tracking-tight">Create Account</h2>
 
             {/* Redesigned Steps Indicator */}
             <div className="flex items-center justify-between mb-12 relative px-4">
@@ -210,20 +211,14 @@ export const Trans_Register = () => {
                       group relative flex items-center justify-center
                       w-10 h-10 rounded-xl border transition-all duration-500
                       ${isCompleted ? 'bg-amber-500 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] text-white' : 
-                        isActive ? 'bg-white/10 border-amber-500/50 text-amber-500 scale-110 shadow-[0_0_20px_rgba(255,255,255,0.1)]' : 
-                        'bg-white/5 border-white/10 text-white/20'}
+                        isActive ? 'bg-white border-amber-500/50 text-amber-500 scale-110 shadow-[0_0_20px_rgba(0,0,0,0.05)]' : 
+                        'bg-white border-gray-100 text-gray-300'}
                     `}>
                       {isCompleted ? (
                         <CheckCircle2 size={18} strokeWidth={2.5} />
                       ) : (
                         <div className="relative">
                           <Icon size={18} className={`${isActive ? 'opacity-100' : 'opacity-40'}`} />
-                          <span className={`
-                            absolute -top-1 -right-2 w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center
-                            ${isActive ? 'bg-amber-500 text-white' : 'bg-white/10 text-white/40'}
-                          `}>
-                            {step.id}
-                          </span>
                         </div>
                       )}
                       
@@ -237,7 +232,7 @@ export const Trans_Register = () => {
                     <div className="mt-3 flex flex-col items-center">
                       <span className={`
                         text-[9px] font-black uppercase tracking-[0.2em] transition-colors duration-300
-                        ${isActive ? 'text-amber-500' : isCompleted ? 'text-white/80' : 'text-white/20'}
+                        ${isActive ? 'text-amber-500' : isCompleted ? 'text-gray-700' : 'text-gray-300'}
                       `}>
                         {step.title}
                       </span>
@@ -256,7 +251,7 @@ export const Trans_Register = () => {
               </div>
             )}
 
-            <div className="max-h-[450px] overflow-y-auto custom-scrollbar pr-2 -mr-2 mb-8">
+            <div className="max-h-[500px] overflow-y-auto custom-scrollbar px-2 py-4 mb-8">
               {currentStep === 1 && (
                 <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                   <InputGroup label="Full Name *" name="fullName" value={form.fullName} onChange={handleChange} placeholder="John Doe" error={errors.fullName} />
@@ -331,7 +326,7 @@ export const Trans_Register = () => {
                       onChange={(e) => setAgreeTerms(e.target.checked)} 
                       className="w-4 h-4 appearance-none bg-white/10 border border-white/30 rounded checked:bg-[#FFB800] checked:border-[#FFB800] transition-all cursor-pointer relative checked:after:content-['✓'] checked:after:absolute checked:after:text-white checked:after:text-[10px] checked:after:font-bold checked:after:left-1/2 checked:after:top-1/2 checked:after:-translate-x-1/2 checked:after:-translate-y-1/2" 
                     />
-                    <span className="text-xs text-white/60 group-hover:text-white transition-colors">
+                    <span className="text-xs text-gray-600 group-hover:text-gray-900 transition-colors">
                       Accept <a href="#" className="text-[#FFB800] font-bold hover:underline">Terms & Privacy</a>.
                     </span>
                   </label>
@@ -343,7 +338,7 @@ export const Trans_Register = () => {
             {/* Navigation Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               {currentStep > 1 && (
-                <button onClick={prevStep} className="flex-1 flex items-center justify-center gap-1 py-3 px-6 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold transition-all border border-white/10 text-sm">
+                <button onClick={prevStep} className="flex-1 flex items-center justify-center gap-1 py-3 px-6 bg-white hover:bg-gray-50 text-gray-600 rounded-lg font-bold transition-all border border-gray-100 text-sm">
                   <ChevronLeft size={16} /> Back
                 </button>
               )}
@@ -359,7 +354,7 @@ export const Trans_Register = () => {
               )}
             </div>
 
-            <p className="text-white/60 text-sm text-center">
+            <p className="text-gray-500 text-sm text-center">
               Already have an account? <a href="/trans-login" className="text-amber-400 font-bold hover:underline ml-1">Login</a>
             </p>
           </div>
@@ -379,36 +374,36 @@ export const Trans_Register = () => {
 }
 
 const InputGroup = ({ label, type = 'text', name, value, onChange, placeholder, error, isTextArea, rows = 3 }: any) => (
-  <div className="flex flex-col gap-2">
-    <label className="text-[10px] uppercase font-bold tracking-widest text-white/50">{label}</label>
+  <div className="flex flex-col gap-2 pb-2">
+    <label className="text-[10px] uppercase font-bold tracking-widest text-gray-600">{label}</label>
     {isTextArea ? (
-      <textarea name={name} value={value} onChange={onChange} rows={rows} placeholder={placeholder} className={`w-full bg-white/20 border ${error ? 'border-red-500/50' : 'border-white/30'} rounded-lg px-5 py-4 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all resize-none font-medium text-sm`} />
+      <textarea name={name} value={value} onChange={onChange} rows={rows} placeholder={placeholder} className={`w-full bg-gray-50 border ${error ? 'border-red-500/50' : 'border-gray-200'} rounded-lg px-5 py-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all resize-none font-medium text-sm`} />
     ) : (
-      <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder} className={`w-full bg-white/20 border ${error ? 'border-red-500/50' : 'border-white/30'} rounded-lg px-5 py-4 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all font-medium`} />
+      <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder} className={`w-full bg-gray-50 border ${error ? 'border-red-500/50' : 'border-gray-200'} rounded-lg px-5 py-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all font-medium`} />
     )}
     {error && <p className="text-red-400 text-[10px] font-bold uppercase tracking-tight ml-2">{error}</p>}
   </div>
 )
 
 const SelectGroup = ({ label, name, value, onChange, options }: any) => (
-  <div className="flex flex-col gap-2">
-    <label className="text-[10px] uppercase font-bold tracking-widest text-white/50">{label}</label>
+  <div className="flex flex-col gap-2 pb-2">
+    <label className="text-[10px] uppercase font-bold tracking-widest text-gray-600">{label}</label>
     <div className="relative">
-      <select name={name} value={value} onChange={onChange} className="w-full bg-white/20 border border-white/30 rounded-lg px-5 py-4 text-white appearance-none focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all font-medium">
-        <option value="" className="bg-gray-900">Select...</option>
-        {options.map((opt: any) => <option key={opt.value} value={opt.value} className="bg-gray-900">{opt.label}</option>)}
+      <select name={name} value={value} onChange={onChange} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-4 text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all font-medium">
+        <option value="" className="bg-white">Select...</option>
+        {options.map((opt: any) => <option key={opt.value} value={opt.value} className="bg-white">{opt.label}</option>)}
       </select>
-      <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-white/30">▼</div>
+      <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
     </div>
   </div>
 )
 
 const PasswordInput = ({ label, name, value, onChange, show, toggle, error }: any) => (
-  <div className="flex flex-col gap-2">
-    <label className="text-[10px] uppercase font-bold tracking-widest text-white/50">{label}</label>
+  <div className="flex flex-col gap-2 pb-2">
+    <label className="text-[10px] uppercase font-bold tracking-widest text-gray-600">{label}</label>
     <div className="relative">
-      <input type={show ? 'text' : 'password'} name={name} value={value} onChange={onChange} placeholder="••••••••" className={`w-full bg-white/20 border ${error ? 'border-red-400/50' : 'border-white/30'} rounded-lg px-5 py-4 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all pr-12 font-medium`} />
-      <button type="button" onClick={toggle} className="absolute right-5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">{show ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+      <input type={show ? 'text' : 'password'} name={name} value={value} onChange={onChange} placeholder="••••••••" className={`w-full bg-gray-50 border ${error ? 'border-red-400/50' : 'border-gray-200'} rounded-lg px-5 py-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all pr-12 font-medium`} />
+      <button type="button" onClick={toggle} className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">{show ? <EyeOff size={18} /> : <Eye size={18} />}</button>
     </div>
     {error && <p className="text-red-400 text-[10px] font-bold uppercase tracking-tight ml-2">{error}</p>}
   </div>
