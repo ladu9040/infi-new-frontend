@@ -119,19 +119,43 @@ export const Trans_ForgotPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen relative flex flex-col overflow-hidden">
+      {/* Background Image Layer */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url("/Trucks-port-containers.jpg")' }}
+      />
+      
+      {/* Gradient Overlay */}
+      <div 
+        className="absolute inset-0 z-0 bg-gradient-to-br from-yellow-400 via-yellow-200/90 to-transparent"
+      />
+
       {/* Header */}
-      <div className=" py-3 sm:py-4 px-4 sm:px-6 shadow-md">
+      <div className="relative z-10 py-3 sm:py-4 px-4 sm:px-6">
         <div className="flex items-center gap-2 max-w-7xl mx-auto">
-          <Truck className="text-white" size={28} />
-          <h1 className="text-black text-xl sm:text-2xl font-bold">
-            INFi-<span className="font-bold text-amber-300">LOGISTICS</span>
-          </h1>
+          {/* Branding (Top Left Corner Style) */}
+          <div className="text-left">
+            <h1 className="text-3xl font-black flex gap-0 leading-none">
+              <span 
+                className="text-transparent" 
+                style={{ WebkitTextStroke: '1px black' }}
+              >
+                IN
+              </span>
+              <span className="text-white">
+                FI
+              </span>
+            </h1>
+            <h2 className="text-[8px] font-bold text-black tracking-[0.4em] uppercase mt-0.5 opacity-80">
+              Logistics
+            </h2>
+          </div>
         </div>
       </div>
 
       {/* Forgot Password Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-6 sm:py-8 md:py-12">
+      <div className="flex-1 flex items-center justify-center relative z-10 px-4 py-6 sm:py-8 md:py-12">
         <div className="bg-white rounded-lg shadow-lg p-6 sm:p-8 md:p-10 lg:p-12 w-full max-w-lg">
           {errorMsg && (
             <div className="mb-6">
@@ -446,7 +470,7 @@ export const Trans_ForgotPassword = () => {
       </div>
 
       {/* Footer */}
-      <div className="bg-white border-t border-gray-200 py-3 sm:py-4 px-4 sm:px-6 text-center text-xs sm:text-sm text-gray-600">
+      <div className="relative z-10 border-t border-black/10 py-3 sm:py-4 px-4 sm:px-6 text-center text-xs sm:text-sm text-black/60">
         <p className="break-words">
           Copyright 2025 © Theme Created By INFi-Logistics, All Rights Reserved.
         </p>
