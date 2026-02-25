@@ -16,35 +16,46 @@ import { NoAccess } from './pages/NoAccess'
 import { InvoiceDashboard } from './pages/Transporter/Invoice/InvoiceDashboard';
 import { CreateInvoiceWizard } from './pages/Transporter/Invoice/CreateInvoice/CreateInvoiceWizard';
 import Agreement from './pages/Agreement'
+import { ProtectedRoute } from './components/auth/ProtectedRoute'
+import { PublicRoute } from './components/auth/PublicRoute'
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/trans-login" replace />} />
-      <Route path="/trans-login" element={<Trans_Login />} />
-      <Route path="/trans-register" element={<Trans_Register />} />
-      <Route path="/trans-intro" element={<TransIntro />} />
-      <Route path="/trans-forget-pass" element={<Trans_ForgotPassword />} />
-      <Route path="/no-access" element={<NoAccess />} />
-      <Route path="/agreement" element={<Agreement />} />
 
-      <Route path="/vendor/quotation/:quotationId" element={<CreateQuotation mode="VENDOR" />} />
-
-      <Route path="/trans-dashboard" element={<TransporterLayout />}>
-        <Route index element={<Trans_DashBoard />} />
-        <Route path="vendor-quotations/:vendorId" element={<QuotationList />} />
-        <Route path="create-quotation/:vendorId" element={<CreateQuotation mode="TRANSPORTER" />} />
-        <Route path="quotation-review/:quotationId" element={<CreateQuotation mode="REVIEW" />} />
-        
-        {/* Invoice Routes */}
-        <Route path="invoices" element={<InvoiceDashboard />} />
-        <Route path="invoice/create" element={<CreateInvoiceWizard />} />
+      {/* Public Routes - Only accessible when NOT logged in */}
+      <Route element={<PublicRoute />}>
+        <Route path="/trans-login" element={<Trans_Login />} />
+        <Route path="/trans-register" element={<Trans_Register />} />
+        <Route path="/trans-intro" element={<TransIntro />} />
+        <Route path="/trans-forget-pass" element={<Trans_ForgotPassword />} />
       </Route>
 
-      {/* Backward compat */}
-      <Route path="/create-quotation/:vendorId" element={<CreateQuotation mode="TRANSPORTER" />} />
-      <Route path="/vendor-quotations/:vendorId" element={<QuotationList />} />
-      <Route path="/quotation-review/:quotationId" element={<CreateQuotation mode="REVIEW" />} />
+      {/* Protected Routes - Only accessible when logged in */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/no-access" element={<NoAccess />} />
+        <Route path="/agreement" element={<Agreement />} />
+        
+        <Route path="/trans-dashboard" element={<TransporterLayout />}>
+          <Route index element={<Trans_DashBoard />} />
+          <Route path="vendor-quotations/:vendorId" element={<QuotationList />} />
+          <Route path="create-quotation/:vendorId" element={<CreateQuotation mode="TRANSPORTER" />} />
+          <Route path="quotation-review/:quotationId" element={<CreateQuotation mode="REVIEW" />} />
+          
+          {/* Invoice Routes */}
+          <Route path="invoices" element={<InvoiceDashboard />} />
+          <Route path="invoice/create" element={<CreateInvoiceWizard />} />
+        </Route>
+
+        {/* Backward compat protected routes */}
+        <Route path="/create-quotation/:vendorId" element={<CreateQuotation mode="TRANSPORTER" />} />
+        <Route path="/vendor-quotations/:vendorId" element={<QuotationList />} />
+        <Route path="/quotation-review/:quotationId" element={<CreateQuotation mode="REVIEW" />} />
+
+        {/* Vendor Quotation (External) - Now protected as requested */}
+        <Route path="/vendor/quotation/:quotationId" element={<CreateQuotation mode="VENDOR" />} />
+      </Route>
     </Routes>
   )
 }

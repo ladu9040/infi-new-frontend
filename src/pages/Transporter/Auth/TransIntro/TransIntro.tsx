@@ -47,11 +47,14 @@ const TransIntro: React.FC = () => {
 
       <button
         onClick={handleSkip}
-        className={`fixed bottom-10 right-10 font-bold text-lg hover:underline cursor-pointer transition-all z-20 ${
-          isFinished ? 'text-black opacity-100 scale-110' : 'text-black opacity-70 hover:opacity-100'
+        className={`fixed bottom-10 right-10 flex items-center gap-2 px-8 py-3 rounded-full font-bold text-lg shadow-lg transform active:scale-95 transition-all z-20 ${
+          isFinished 
+            ? 'bg-black text-white hover:bg-gray-900 ring-4 ring-black/20 scale-110' 
+            : 'bg-white/80 backdrop-blur-md text-black hover:bg-white border-2 border-black/5'
         }`}
       >
-        {isFinished ? 'Next →' : 'Skip →'}
+        <span>{isFinished ? 'Get Started' : 'Skip Intro'}</span>
+        <span className="text-xl">→</span>
       </button>
     </div>
   );
