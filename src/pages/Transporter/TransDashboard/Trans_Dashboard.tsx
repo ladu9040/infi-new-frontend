@@ -41,6 +41,9 @@ import { AllocateVehicleModal } from '../VehicleAllocation/AllocateVehicleModal'
 import { ShipmentRegister } from '../LR/ShipmentRegister'
 import { CreateLRModal } from '../LR/CreateLRModal'
 import { IndentList } from '../Indent/IndentList'
+import { TransporterIndentsPage } from '../Indent/TransporterIndentsPage'
+import { TripsPage } from '../Trips/TripsPage'
+import { BiddingPage } from '../Bidding/BiddingPage'
 import { InvoiceDashboard } from '../Invoice/InvoiceDashboard'
 
 const humanize = (str?: string) => {
@@ -53,6 +56,9 @@ const humanize = (str?: string) => {
 
 export const SIDEBAR_ITEMS = [
   { name: 'Dashboard', icon: LayoutDashboard },
+  { name: 'Indents', icon: Package },
+  { name: 'Trips', icon: Truck },
+  { name: 'Bidding', icon: Tag },
   { name: 'Vehicle Allocation', icon: ArrowLeftRight },
   { name: 'LRs', icon: FileText },
   { name: 'Invoices', icon: FilePlus },
@@ -297,6 +303,9 @@ export const Trans_DashBoard = () => {
               <h1 className="text-lg font-semibold text-gray-800">{activeTab}</h1>
               <p className="text-sm text-gray-500">
                 {activeTab === 'Dashboard' ? 'Track user interaction, usage, and engagement'
+                  : activeTab === 'Indents' ? 'Accept or reject incoming transport indents'
+                  : activeTab === 'Trips' ? 'Track active trips and manage POD uploads'
+                  : activeTab === 'Bidding' ? 'Place competitive bids on open market indents'
                   : activeTab === 'Vehicle Allocation' ? 'Allocate vehicles to approved indents'
                   : activeTab === 'LRs' ? 'Generate and Manage Lorry Receipts'
                   : activeTab === 'Invoices' ? 'Generate and Manage Invoices'
@@ -352,6 +361,12 @@ export const Trans_DashBoard = () => {
 
         <main className="p-6 overflow-y-auto bg-gray-50 flex-1">
           {activeTab === 'Dashboard' && <DashboardContent stats={stats} user={user} />}
+
+          {activeTab === 'Indents' && <TransporterIndentsPage />}
+
+          {activeTab === 'Trips' && <TripsPage />}
+
+          {activeTab === 'Bidding' && <BiddingPage />}
 
           {activeTab === 'Vehicle Allocation' && (
               <VehicleAllocationList 
@@ -432,15 +447,18 @@ export const Trans_DashBoard = () => {
             <ProfileContent />
           )}
 
-          {activeTab !== 'Dashboard' && 
-           activeTab !== 'Vendors' && 
-           activeTab !== 'Quotations' && 
-           activeTab !== 'Vehicle Allocation' && 
-           activeTab !== 'LRs' && 
-           activeTab !== 'Invoices' && 
-           activeTab !== 'Rate Master' && 
-           activeTab !== 'Vehicles' && 
-           activeTab !== 'Orders' && 
+          {activeTab !== 'Dashboard' &&
+           activeTab !== 'Indents' &&
+           activeTab !== 'Trips' &&
+           activeTab !== 'Bidding' &&
+           activeTab !== 'Vendors' &&
+           activeTab !== 'Quotations' &&
+           activeTab !== 'Vehicle Allocation' &&
+           activeTab !== 'LRs' &&
+           activeTab !== 'Invoices' &&
+           activeTab !== 'Rate Master' &&
+           activeTab !== 'Vehicles' &&
+           activeTab !== 'Orders' &&
            activeTab !== 'Profile' && (
             <PlaceholderContent title={activeTab} />
           )}
