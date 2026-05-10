@@ -48,13 +48,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isTransporter = userData.roles.includes('TRANSPORTER')
     if (isTransporter) {
       localStorage.setItem('transporterToken', token)
-      localStorage.removeItem('token') // Ensure no conflict
+      localStorage.removeItem('token')
     } else {
       localStorage.setItem('token', token)
       localStorage.removeItem('transporterToken')
     }
     setUser(userData)
     setRole(userData.roles[0])
+    // resetStore() clears the cache AND refetches all active queries.
+    // This guarantees a previous transporter's myBid/data never leaks into the new session.
+    client.resetStore().catch(() => {})
   }
 
   const logout = () => {

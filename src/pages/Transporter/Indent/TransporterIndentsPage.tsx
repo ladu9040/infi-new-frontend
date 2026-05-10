@@ -9,6 +9,8 @@ const GET_INDENTS = gql`
     getAllTransporterIndents(status: $status) {
       id
       indentId
+      indentNumber
+      transporterEmail
       customerName
       originCity
       destinationCity
