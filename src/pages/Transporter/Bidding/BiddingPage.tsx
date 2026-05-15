@@ -57,7 +57,7 @@ export const BiddingPage = () => {
   const [selectedIndent, setSelectedIndent] = useState<any>(null);
   const [bidForm, setBidForm] = useState({ quotedRate: '', remarks: '' });
 
-  const { data, loading, refetch } = useQuery(GET_OPEN_BID_INDENTS, {
+  const { data, loading, refetch } = useQuery<{ getAllOpenBidIndents: any[] }>(GET_OPEN_BID_INDENTS, {
     fetchPolicy: 'network-only',
     pollInterval: 10000,
   });

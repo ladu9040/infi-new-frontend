@@ -87,9 +87,9 @@ export const TripsPage = () => {
   const [chargeForm, setChargeForm] = useState({ chargeType: '', amount: '', remarks: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, loading, refetch } = useQuery(GET_ALL_TRIPS, { fetchPolicy: 'network-only' });
+  const { data, loading, refetch } = useQuery<{ getAllTrips: any[] }>(GET_ALL_TRIPS, { fetchPolicy: 'network-only' });
 
-  const [uploadPOD, { loading: uploading }] = useMutation(UPLOAD_POD, {
+  const [uploadPOD, { loading: uploading }] = useMutation<{ uploadTripPOD: any }>(UPLOAD_POD, {
     onCompleted: (d) => {
       toast.success('POD uploaded successfully');
       setSelectedTrip((prev: any) => prev ? { ...prev, podStatus: d.uploadTripPOD.podStatus, podUrl: d.uploadTripPOD.podUrl } : prev);
@@ -103,7 +103,7 @@ export const TripsPage = () => {
     onError: (e) => toast.error(e.message),
   });
 
-  const [addCharge, { loading: addingCharge }] = useMutation(ADD_EXTRA_CHARGE, {
+  const [addCharge, { loading: addingCharge }] = useMutation<{ addExtraCharge: any }>(ADD_EXTRA_CHARGE, {
     onCompleted: (d) => {
       toast.success('Extra charge added');
       setChargeForm({ chargeType: '', amount: '', remarks: '' });

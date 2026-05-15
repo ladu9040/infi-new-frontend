@@ -73,7 +73,7 @@ export const TransporterIndentsPage = () => {
     expectedArrival: '',
   });
 
-  const { data, loading, refetch } = useQuery(GET_INDENTS, {
+  const { data, loading, refetch } = useQuery<{ getAllTransporterIndents: any[] }>(GET_INDENTS, {
     variables: { status: STATUS_MAP[activeSubTab] },
     fetchPolicy: 'network-only',
   });
