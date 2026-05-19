@@ -18,11 +18,15 @@ import { CreateInvoiceWizard } from './pages/Transporter/Invoice/CreateInvoice/C
 import Agreement from './pages/Agreement'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { PublicRoute } from './components/auth/PublicRoute'
+import { TripSlipPage } from './pages/Transporter/TripSlip/TripSlipPage'
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/trans-login" replace />} />
+
+      {/* Fully public — token IS the auth. Accessible without login. */}
+      <Route path="/t/:slipToken" element={<TripSlipPage />} />
 
       {/* Public Routes - Only accessible when NOT logged in */}
       <Route element={<PublicRoute />}>

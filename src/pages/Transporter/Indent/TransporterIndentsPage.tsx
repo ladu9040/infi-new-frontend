@@ -14,9 +14,30 @@ const GET_INDENTS = gql`
       customerName
       originCity
       destinationCity
+      sourceLocationName
+      sourceAddress
+      destinationAddress
+      routeCode
+      soldToPartyName
+      consigneeName
       pickupDate
       goodsType
+      totalWeightKg
+      totalVolumeCbm
+      totalOrderCount
+      materialSummary
+      orderIds
+      expectedDispatchDate
+      expectedDeliveryDate
+      expectedFreightAmount
+      agreedFreightAmount
       vehicleType
+      vehicleCount
+      vehicleNumber
+      driverName
+      driverNumber
+      expectedPickup
+      expectedArrival
       status
       createdAt
     }
@@ -244,10 +265,172 @@ export const TransporterIndentsPage = () => {
                         )}
                       </tr>
 
-                      {/* Inline Accept Form */}
-                      {activeSubTab === 'new' && acceptingId === item.id && (
+                      {/* Inline Detail Panel — visible on both 'new' and 'accepted' tabs */}
+                      {acceptingId === item.id && (
                         <tr>
                           <td colSpan={5} className="px-6 pb-5 bg-blue-50/60">
+                            {/* ─── INDENT CONTEXT CARD ─────────────────────────────────── */}
+                            <div className="border border-gray-200 rounded-xl bg-white p-4 mb-3 shadow-sm">
+                              <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+                                <div>
+                                  <p className="text-xs font-bold text-blue-600 tracking-wide uppercase">
+                                    {item.indentNumber || item.indentId}
+                                  </p>
+                                  <p className="text-[11px] text-gray-500 mt-0.5">Indent Details</p>
+                                </div>
+                                {item.expectedFreightAmount > 0 && (
+                                  <div className="text-right">
+                                    <p className="text-[10px] text-gray-500 uppercase">Agreed Freight</p>
+                                    <p className="text-base font-bold text-emerald-600">
+                                      ₹{(item.agreedFreightAmount || item.expectedFreightAmount).toLocaleString('en-IN')}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
+                                {/* Pickup */}
+                                <div>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">📍 Pickup</p>
+                                  <p className="font-semibold text-gray-800">
+                                    {item.sourceLocationName || item.soldToPartyName || item.originCity || '—'}
+                                  </p>
+                                  {item.sourceAddress && (
+                                    <p className="text-[11px] text-gray-500 mt-0.5">{item.sourceAddress}</p>
+                                  )}
+                                  {item.originCity && item.sourceLocationName && (
+                                    <p className="text-[11px] text-gray-400 mt-0.5">{item.originCity}</p>
+                                  )}
+                                </div>
+
+                                {/* Drop */}
+                                <div>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">🎯 Drop</p>
+                                  <p className="font-semibold text-gray-800">
+                                    {item.consigneeName || item.destinationCity || '—'}
+                                  </p>
+                                  {item.destinationAddress && (
+                                    <p className="text-[11px] text-gray-500 mt-0.5">{item.destinationAddress}</p>
+                                  )}
+                                  {item.destinationCity && item.consigneeName && (
+                                    <p className="text-[11px] text-gray-400 mt-0.5">{item.destinationCity}</p>
+                                  )}
+                                </div>
+
+                                {/* Cargo */}
+                                <div>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">📦 Cargo</p>
+                                  <p className="font-semibold text-gray-800">
+                                    {item.totalWeightKg
+                                      ? `${(item.totalWeightKg / 1000).toFixed(1)} T`
+                                      : '—'}
+                                    {item.totalVolumeCbm ? ` · ${item.totalVolumeCbm.toFixed(1)} cbm` : ''}
+                                    {item.totalOrderCount ? ` · ${item.totalOrderCount} SKU${item.totalOrderCount > 1 ? 's' : ''}` : ''}
+                                  </p>
+                                  {item.materialSummary && (
+                                    <p className="text-[11px] text-gray-500 mt-0.5">{item.materialSummary}</p>
+                                  )}
+                                </div>
+
+                                {/* Vehicle expected */}
+                                <div>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">🚚 Vehicle</p>
+                                  <p className="font-semibold text-gray-800">
+                                    {item.vehicleCount && item.vehicleCount > 1 ? `${item.vehicleCount} × ` : ''}
+                                    {item.vehicleType || 'Any'}
+                                  </p>
+                                  {item.routeCode && (
+                                    <p className="text-[11px] text-gray-500 mt-0.5">Route: {item.routeCode}</p>
+                                  )}
+                                </div>
+
+                                {/* Schedule */}
+                                <div>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">📅 Dispatch</p>
+                                  <p className="font-semibold text-gray-800">
+                                    {item.expectedDispatchDate
+                                      ? new Date(parseInt(item.expectedDispatchDate) || item.expectedDispatchDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                                      : item.pickupDate
+                                      ? new Date(parseInt(item.pickupDate) || item.pickupDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                                      : '—'}
+                                  </p>
+                                </div>
+
+                                {/* Order IDs */}
+                                {item.orderIds && item.orderIds.length > 0 && (
+                                  <div>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">📋 Sales Docs</p>
+                                    <p className="text-[11px] font-mono text-gray-700">
+                                      {item.orderIds.slice(0, 3).join(', ')}
+                                      {item.orderIds.length > 3 ? ` +${item.orderIds.length - 3} more` : ''}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Allocated Vehicle & Driver (post-accept) */}
+                              {(item.vehicleNumber || item.driverName || item.driverNumber) && (
+                                <div className="mt-4 pt-4 border-t border-blue-100">
+                                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                    <CheckCircle className="w-3 h-3" /> Allocated Vehicle & Driver
+                                  </p>
+                                  <div className="grid grid-cols-2 gap-3 text-xs">
+                                    {item.vehicleNumber && (
+                                      <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase">Vehicle No.</p>
+                                        <p className="font-bold text-gray-800 font-mono">{item.vehicleNumber}</p>
+                                        {item.vehicleType && (
+                                          <p className="text-[10px] text-gray-500">{item.vehicleType}</p>
+                                        )}
+                                      </div>
+                                    )}
+                                    {item.driverName && (
+                                      <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase">Driver</p>
+                                        <p className="font-bold text-gray-800 flex items-center gap-1">
+                                          <User className="w-3 h-3 text-gray-400" />
+                                          {item.driverName}
+                                        </p>
+                                        {item.driverNumber && (
+                                          <p className="text-[10px] text-gray-600">📞 {item.driverNumber}</p>
+                                        )}
+                                      </div>
+                                    )}
+                                    {item.expectedPickup && (
+                                      <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase">Expected Pickup</p>
+                                        <p className="font-semibold text-gray-700">
+                                          {(() => {
+                                            const raw = item.expectedPickup;
+                                            const d = new Date(parseInt(raw) || raw);
+                                            return isNaN(d.getTime())
+                                              ? '—'
+                                              : d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+                                          })()}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {item.expectedArrival && (
+                                      <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase">Expected Arrival</p>
+                                        <p className="font-semibold text-gray-700">
+                                          {(() => {
+                                            const raw = item.expectedArrival;
+                                            const d = new Date(parseInt(raw) || raw);
+                                            return isNaN(d.getTime())
+                                              ? '—'
+                                              : d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+                                          })()}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* ─── VEHICLE & DRIVER FORM (only on 'new' tab) ───────────── */}
+                            {activeSubTab === 'new' && (
                             <div className="border border-blue-200 rounded-xl p-5 bg-white shadow-sm">
                               <div className="flex items-center justify-between mb-4">
                                 <h4 className="text-sm font-bold text-gray-800">Vehicle & Driver Details (On Accept)</h4>
@@ -341,6 +524,7 @@ export const TransporterIndentsPage = () => {
                                 </button>
                               </div>
                             </div>
+                            )}
                           </td>
                         </tr>
                       )}

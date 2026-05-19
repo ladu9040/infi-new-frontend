@@ -1,20 +1,23 @@
 import React, { useState, useRef } from 'react';
-import { Search, Upload, Plus, Eye, CheckCircle2, Clock, Truck } from 'lucide-react';
+import { Search, Upload, Plus, Eye, CheckCircle2, Clock, Truck, Share2 } from 'lucide-react';
 import { gql } from '@apollo/client';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { toast } from 'react-toastify';
+import { TripSlipShareModal } from '../TripSlip/TripSlipShareModal';
 
 const GET_ALL_TRIPS = gql`
   query GetAllTrips {
     getAllTrips {
       id
       tripId
+      slipToken
       indentId
       originCity
       destinationCity
       vehicleType
       vehicleNumber
       driverName
+      driverNumber
       status
       podUrl
       podStatus
@@ -24,6 +27,9 @@ const GET_ALL_TRIPS = gql`
         remarks
       }
       createdAt
+      indent {
+        indentNumber
+      }
     }
   }
 `;
@@ -83,6 +89,7 @@ const POD_STATUS_COLOR: Record<string, string> = {
 export const TripsPage = () => {
   const [search, setSearch] = useState('');
   const [selectedTrip, setSelectedTrip] = useState<any>(null);
+  const [shareTrip, setShareTrip] = useState<any>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>('info');
   const [chargeForm, setChargeForm] = useState({ chargeType: '', amount: '', remarks: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -235,12 +242,23 @@ export const TripsPage = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedTrip(trip); setDetailTab('info'); }}
-                          className="px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-1"
-                        >
-                          <Eye className="w-3 h-3" /> View
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSelectedTrip(trip); setDetailTab('info'); }}
+                            className="px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-1"
+                          >
+                            <Eye className="w-3 h-3" /> View
+                          </button>
+                          {trip.slipToken && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setShareTrip(trip); }}
+                              title="Share Trip Slip"
+                              className="px-3 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1"
+                            >
+                              <Share2 className="w-3 h-3" /> Share
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -259,12 +277,22 @@ export const TripsPage = () => {
               <p className="text-xs text-gray-500 font-medium">Trip ID</p>
               <h3 className="text-lg font-bold text-indigo-700">{selectedTrip.tripId}</h3>
             </div>
-            <button
-              onClick={() => setSelectedTrip(null)}
-              className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50"
-            >
-              Close
-            </button>
+            <div className="flex items-center gap-2">
+              {selectedTrip.slipToken && (
+                <button
+                  onClick={() => setShareTrip(selectedTrip)}
+                  className="text-xs text-white bg-emerald-600 hover:bg-emerald-700 rounded-md px-3 py-1.5 flex items-center gap-1.5 font-semibold"
+                >
+                  <Share2 className="w-3.5 h-3.5" /> Share Slip
+                </button>
+              )}
+              <button
+                onClick={() => setSelectedTrip(null)}
+                className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
           </div>
 
           {/* Detail Sub-tabs */}
@@ -437,6 +465,21 @@ export const TripsPage = () => {
             )}
           </div>
         </div>
+      )}
+
+      {shareTrip && (
+        <TripSlipShareModal
+          open={!!shareTrip}
+          onClose={() => setShareTrip(null)}
+          slipToken={shareTrip.slipToken}
+          tripId={shareTrip.tripId}
+          indentNumber={shareTrip.indent?.indentNumber}
+          pickup={shareTrip.originCity}
+          drop={shareTrip.destinationCity}
+          vehicleNumber={shareTrip.vehicleNumber}
+          driverName={shareTrip.driverName}
+          driverNumber={shareTrip.driverNumber}
+        />
       )}
     </div>
   );
