@@ -135,7 +135,7 @@ interface LRsData {
 
 export const Trans_DashBoard = () => {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const authContext = useContext(AuthContext)
   const user = authContext?.user
   const logout = authContext?.logout
@@ -183,7 +183,9 @@ export const Trans_DashBoard = () => {
 
   const handleTabChange = (tabName: string) => {
     setActiveTab(tabName)
-    
+    // Mirror the tab into the URL so a refresh restores the same view.
+    setSearchParams({ tab: tabName }, { replace: true })
+
     // Reset view states when changing tabs
     if (tabName === 'Vendors') {
       setVendorView('list')
@@ -251,7 +253,7 @@ export const Trans_DashBoard = () => {
         <div className="p-3 border-t border-gray-100">
           {isExpanded ? (
             <div 
-              onClick={() => setActiveTab('Profile')}
+              onClick={() => handleTabChange('Profile')}
               className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition group"
             >
               <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold border shadow-sm shrink-0">
@@ -276,7 +278,7 @@ export const Trans_DashBoard = () => {
           ) : (
             <div 
               className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold border shadow-sm mx-auto cursor-pointer hover:bg-amber-200 transition-colors"
-              onClick={() => setActiveTab('Profile')}
+              onClick={() => handleTabChange('Profile')}
               title={user?.name || 'User Profile'}
             >
               {user?.name?.charAt(0) || 'U'}
