@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Truck } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useMutation } from '@apollo/client/react'
 import { useContext } from 'react'
 import { AuthContext } from '../../../../context/AuthContextObject'
 import { TRANSPORTER_LOGIN_MUTATION } from './transLogin.gql'
 import { Alert } from '../../../../components/common/Alert'
-import Loader from '../../../../components/common/Loader'
+import type { DocumentItem } from '../../../../auth/auth.types'
 
 interface Transporter {
   id: string
@@ -32,10 +32,10 @@ interface Transporter {
   primaryVehicleType?: string
   serviceAreas?: string[]
   documents?: {
-    transportLicense: any
-    vehicleRC: any
-    insuranceCertificate: any
-    panCard: any
+    transportLicense?: DocumentItem
+    vehicleRC?: DocumentItem
+    insuranceCertificate?: DocumentItem
+    panCard?: DocumentItem
   }
   isVerified: boolean
   isActive: boolean
@@ -57,6 +57,8 @@ interface LoginVariables {
 
 export const Trans_Login = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/trans-dashboard'
   const authContext = useContext(AuthContext)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
@@ -103,10 +105,10 @@ export const Trans_Login = () => {
 
       localStorage.setItem('role', 'TRANSPORTER')
       toast.success(`Welcome back, ${transporter.fullName}`)
-      navigate('/trans-dashboard')
-    } catch (err: any) {
+      navigate(redirectTo)
+    } catch (err) {
       console.error('Login error detail:', err)
-      setErrorMsg(err.message || 'Login failed')
+      setErrorMsg(err instanceof Error ? err.message : 'Login failed')
     }
 
   }

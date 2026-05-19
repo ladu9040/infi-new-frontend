@@ -18,6 +18,7 @@ import { CreateInvoiceWizard } from './pages/Transporter/Invoice/CreateInvoice/C
 import Agreement from './pages/Agreement'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { PublicRoute } from './components/auth/PublicRoute'
+import { LinkAccount } from './pages/LinkAccount/LinkAccount'
 
 function AppRoutes() {
   return (
@@ -31,6 +32,9 @@ function AppRoutes() {
         <Route path="/trans-intro" element={<TransIntro />} />
         <Route path="/trans-forget-pass" element={<Trans_ForgotPassword />} />
       </Route>
+
+      {/* Link Account — publicly accessible (email link flow) */}
+      <Route path="/link-account" element={<LinkAccount />} />
 
       {/* Protected Routes - Only accessible when logged in */}
       <Route element={<ProtectedRoute />}>

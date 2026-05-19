@@ -1,10 +1,29 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Truck, Upload, ChevronLeft, ChevronRight, CheckCircle2, User, Building2, Car, ShieldCheck, Lock } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Eye, EyeOff, Upload, ChevronLeft, ChevronRight, CheckCircle2, User, Building2, Car, ShieldCheck, Lock } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { gql } from '@apollo/client'
 import { useMutation } from '@apollo/client/react'
 import { toast } from 'react-toastify'
 import { REGISTER_TRANSPORTER_MUTATION } from './transRegister'
 import { Alert } from '../../../../components/common/Alert'
+
+// ── Response types ────────────────────────────────────────────────────────────
+interface RegisterTransporterData {
+  registerTransporter: {
+    token: string
+    transporter: {
+      id: string
+      fullName: string
+      email: string
+      phoneNumber: string
+      isVerified: boolean
+    }
+  }
+}
+
+interface LinkTmsAccountData {
+  linkTmsAccount: boolean
+}
 
 const STEPS = [
   { id: 1, title: 'Personal', icon: User },
@@ -16,6 +35,9 @@ const STEPS = [
 
 export const Trans_Register = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const tmsTransporterId = searchParams.get('transporterId') || ''
+  const prefillEmail = searchParams.get('email') || ''
   const [currentStep, setCurrentStep] = useState(1)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -24,7 +46,7 @@ export const Trans_Register = () => {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [form, setForm] = useState({
     fullName: '',
-    email: '',
+    email: prefillEmail,
     phoneNumber: '',
     alternatePhoneNumber: '',
     companyName: '',
@@ -42,11 +64,18 @@ export const Trans_Register = () => {
     password: '',
     confirmPassword: '',
   })
-  const [registerTransporter, { loading }] = useMutation(REGISTER_TRANSPORTER_MUTATION)
+  const [registerTransporter, { loading }] = useMutation<RegisterTransporterData>(REGISTER_TRANSPORTER_MUTATION)
+
+  const LINK_TMS_ACCOUNT = gql`
+    mutation LinkTmsAccountFromRegister($tmsTransporterId: String!, $email: String!) {
+      linkTmsAccount(tmsTransporterId: $tmsTransporterId, email: $email)
+    }
+  `
+  const [linkTmsAccount] = useMutation<LinkTmsAccountData>(LINK_TMS_ACCOUNT)
 
   const validateStep = (step: number) => {
     const newErrors: Record<string, string> = {}
-    
+
     if (step === 1) {
       if (!form.fullName) newErrors.fullName = 'Full Name is required'
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = 'Invalid email format'
@@ -106,7 +135,7 @@ export const Trans_Register = () => {
     if (!validateStep(5)) return
 
     try {
-      await registerTransporter({
+      const result = await registerTransporter({
         variables: {
           input: {
             fullName: form.fullName,
@@ -137,82 +166,100 @@ export const Trans_Register = () => {
           },
         },
       })
-      toast.success('Registration successful!');
-      navigate('/trans-intro');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Registration failed')
+      // Store token so linkTmsAccount mutation is authenticated
+      if (!result.data) throw new Error('Registration failed — no data returned')
+      const { token } = result.data.registerTransporter
+      localStorage.setItem('transporterToken', token)
+
+      // Auto-link to TMS if invoked via link email
+      if (tmsTransporterId) {
+        try {
+          await linkTmsAccount({
+            variables: { tmsTransporterId, email: form.email },
+            context: { headers: { authorization: `Bearer ${token}` } },
+          })
+          toast.success('Account created and linked to TMS!')
+        } catch {
+          toast.success('Registration successful! Linking will be completed on next login.')
+        }
+      } else {
+        toast.success('Registration successful!')
+      }
+
+      navigate('/trans-intro')
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Registration failed')
     }
   }
 
   return (
     <div className="min-h-screen relative flex items-center justify-center overflow-hidden font-sans">
       {/* Background Image Layer */}
-      <div 
+      <div
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: 'url("/Trucks-port-containers.jpg")' }}
       />
-      
+
       {/* Gradient Overlay */}
-      <div 
+      <div
         className="absolute inset-0 z-0 bg-gradient-to-br from-yellow-400 via-yellow-200/90 to-transparent"
       />
       {/* Background Image elements removed for gradient alignment */}
 
-        {/* Branding (Top Left Corner) */}
-        <div className="absolute top-6 left-6 lg:top-10 lg:left-12 text-left animate-in fade-in slide-in-from-left duration-1000">
-          <h1 className="text-4xl lg:text-5xl font-black flex gap-0 leading-none">
-            <span 
-              className="text-transparent" 
-              style={{ WebkitTextStroke: '1.2px black' }}
-            >
-              IN
-            </span>
-            <span className="text-white">
-              FI
-            </span>
-          </h1>
-          <h2 className="text-[10px] lg:text-xs font-bold text-black tracking-[0.4em] uppercase mt-1 opacity-80">
-            Logistics
-          </h2>
-          <div className="h-0.5 lg:h-[3px] w-10 lg:w-12 bg-black my-2 rounded-full" />
-        </div>
+      {/* Branding (Top Left Corner) */}
+      <div className="absolute top-6 left-6 lg:top-10 lg:left-12 text-left animate-in fade-in slide-in-from-left duration-1000">
+        <h1 className="text-4xl lg:text-5xl font-black flex gap-0 leading-none">
+          <span
+            className="text-transparent"
+            style={{ WebkitTextStroke: '1.2px black' }}
+          >
+            IN
+          </span>
+          <span className="text-white">
+            FI
+          </span>
+        </h1>
+        <h2 className="text-[10px] lg:text-xs font-bold text-black tracking-[0.4em] uppercase mt-1 opacity-80">
+          Logistics
+        </h2>
+        <div className="h-0.5 lg:h-[3px] w-10 lg:w-12 bg-black my-2 rounded-full" />
+      </div>
       {/* Main Content Container (Centered Form) */}
       <div className="relative z-10 w-full max-w-[1400px] flex flex-col items-center justify-center px-4 py-12">
-        
+
 
         {/* Form Container (Widened and Centered - Minimalistic Design) */}
         <div className="w-full lg:w-[1000px] animate-in fade-in slide-in-from-bottom-4 duration-1000 relative">
           <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-14 w-full relative border border-gray-100">
-            
+
             <h2 className="text-4xl font-light mb-12 text-gray-900 text-center tracking-tight">Create Account</h2>
 
             {/* Redesigned Steps Indicator */}
             <div className="flex items-center justify-between mb-12 relative px-4">
-              
-              
+
+
               {/* active progress line */}
-              <div 
-                className="absolute top-5 left-10 h-[2px] bg-gradient-to-r from-amber-500 to-yellow-300 -z-0 transition-all duration-700 ease-in-out shadow-[0_0_10px_rgba(245,158,11,0.5)]" 
-                style={{ 
+              <div
+                className="absolute top-5 left-10 h-[2px] bg-gradient-to-r from-amber-500 to-yellow-300 -z-0 transition-all duration-700 ease-in-out shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                style={{
                   width: `calc(${((currentStep - 1) / (STEPS.length - 1)) * 100}% - ${currentStep === 1 ? '0px' : '20px'})`,
                   maxWidth: 'calc(100% - 80px)'
                 }}
               />
 
-              {STEPS.map((step, index) => {
+              {STEPS.map((step) => {
                 const Icon = step.icon
                 const isActive = currentStep === step.id
                 const isCompleted = currentStep > step.id
-                const isPast = currentStep > step.id
-                
+
                 return (
                   <div key={step.id} className="relative z-10 flex flex-col items-center flex-1">
                     <div className={`
                       group relative flex items-center justify-center
                       w-10 h-10 rounded-xl border transition-all duration-500
-                      ${isCompleted ? 'bg-amber-500 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] text-white' : 
-                        isActive ? 'bg-white border-amber-500/50 text-amber-500 scale-110 shadow-[0_0_20px_rgba(0,0,0,0.05)]' : 
-                        'bg-white border-gray-100 text-gray-300'}
+                      ${isCompleted ? 'bg-amber-500 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] text-white' :
+                        isActive ? 'bg-white border-amber-500/50 text-amber-500 scale-110 shadow-[0_0_20px_rgba(0,0,0,0.05)]' :
+                          'bg-white border-gray-100 text-gray-300'}
                     `}>
                       {isCompleted ? (
                         <CheckCircle2 size={18} strokeWidth={2.5} />
@@ -221,7 +268,7 @@ export const Trans_Register = () => {
                           <Icon size={18} className={`${isActive ? 'opacity-100' : 'opacity-40'}`} />
                         </div>
                       )}
-                      
+
                       {/* Active Ring Pulse */}
                       {isActive && (
                         <div className="absolute inset-0 rounded-xl border-2 border-amber-500/30 animate-ping opacity-75" />
@@ -318,13 +365,13 @@ export const Trans_Register = () => {
                 <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                   <PasswordInput label="Password *" name="password" value={form.password} onChange={handleChange} show={showPassword} toggle={() => setShowPassword(!showPassword)} error={errors.password} />
                   <PasswordInput label="Confirm Password *" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} show={showConfirmPassword} toggle={() => setShowConfirmPassword(!showConfirmPassword)} error={errors.confirmPassword} />
-                  
+
                   <label className="flex items-center gap-3 cursor-pointer group mt-6">
-                    <input 
-                      type="checkbox" 
-                      checked={agreeTerms} 
-                      onChange={(e) => setAgreeTerms(e.target.checked)} 
-                      className="w-4 h-4 appearance-none bg-white/10 border border-white/30 rounded checked:bg-[#FFB800] checked:border-[#FFB800] transition-all cursor-pointer relative checked:after:content-['✓'] checked:after:absolute checked:after:text-white checked:after:text-[10px] checked:after:font-bold checked:after:left-1/2 checked:after:top-1/2 checked:after:-translate-x-1/2 checked:after:-translate-y-1/2" 
+                    <input
+                      type="checkbox"
+                      checked={agreeTerms}
+                      onChange={(e) => setAgreeTerms(e.target.checked)}
+                      className="w-4 h-4 appearance-none bg-white/10 border border-white/30 rounded checked:bg-[#FFB800] checked:border-[#FFB800] transition-all cursor-pointer relative checked:after:content-['✓'] checked:after:absolute checked:after:text-white checked:after:text-[10px] checked:after:font-bold checked:after:left-1/2 checked:after:top-1/2 checked:after:-translate-x-1/2 checked:after:-translate-y-1/2"
                     />
                     <span className="text-xs text-gray-600 group-hover:text-gray-900 transition-colors">
                       Accept <a href="#" className="text-[#FFB800] font-bold hover:underline">Terms & Privacy</a>.
@@ -342,7 +389,7 @@ export const Trans_Register = () => {
                   <ChevronLeft size={16} /> Back
                 </button>
               )}
-              
+
               {currentStep < 5 ? (
                 <button onClick={nextStep} className={`flex-[2] flex items-center justify-center gap-1 py-3 px-6 bg-[#FF9900] hover:bg-[#FF8800] text-white rounded-lg font-bold transition-all shadow-lg shadow-amber-500/20 text-sm ${currentStep === 1 ? 'w-full' : ''}`}>
                   Continue <ChevronRight size={16} />
@@ -373,7 +420,18 @@ export const Trans_Register = () => {
   )
 }
 
-const InputGroup = ({ label, type = 'text', name, value, onChange, placeholder, error, isTextArea, rows = 3 }: any) => (
+interface InputGroupProps {
+  label: string
+  type?: string
+  name: string
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+  placeholder?: string
+  error?: string
+  isTextArea?: boolean
+  rows?: number
+}
+const InputGroup = ({ label, type = 'text', name, value, onChange, placeholder, error, isTextArea, rows = 3 }: InputGroupProps) => (
   <div className="flex flex-col gap-2 pb-2">
     <label className="text-[10px] uppercase font-bold tracking-widest text-gray-600">{label}</label>
     {isTextArea ? (
@@ -385,20 +443,36 @@ const InputGroup = ({ label, type = 'text', name, value, onChange, placeholder, 
   </div>
 )
 
-const SelectGroup = ({ label, name, value, onChange, options }: any) => (
+interface SelectGroupProps {
+  label: string
+  name: string
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
+  options: Array<{ value: string; label: string }>
+}
+const SelectGroup = ({ label, name, value, onChange, options }: SelectGroupProps) => (
   <div className="flex flex-col gap-2 pb-2">
     <label className="text-[10px] uppercase font-bold tracking-widest text-gray-600">{label}</label>
     <div className="relative">
       <select name={name} value={value} onChange={onChange} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-4 text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all font-medium">
         <option value="" className="bg-white">Select...</option>
-        {options.map((opt: any) => <option key={opt.value} value={opt.value} className="bg-white">{opt.label}</option>)}
+        {options.map((opt) => <option key={opt.value} value={opt.value} className="bg-white">{opt.label}</option>)}
       </select>
       <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
     </div>
   </div>
 )
 
-const PasswordInput = ({ label, name, value, onChange, show, toggle, error }: any) => (
+interface PasswordInputProps {
+  label: string
+  name: string
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  show: boolean
+  toggle: () => void
+  error?: string
+}
+const PasswordInput = ({ label, name, value, onChange, show, toggle, error }: PasswordInputProps) => (
   <div className="flex flex-col gap-2 pb-2">
     <label className="text-[10px] uppercase font-bold tracking-widest text-gray-600">{label}</label>
     <div className="relative">
@@ -409,7 +483,7 @@ const PasswordInput = ({ label, name, value, onChange, show, toggle, error }: an
   </div>
 )
 
-const DocUpload = ({ label }: any) => (
+const DocUpload = ({ label }: { label: string }) => (
   <label className="flex flex-col items-center justify-center gap-3 p-6 bg-white/5 border-2 border-dashed border-white/10 hover:border-amber-500/50 hover:bg-white/10 rounded-2xl cursor-pointer transition-all group">
     <div className="p-3 bg-white/5 rounded-xl text-white/30 group-hover:text-amber-500 transition-colors">
       <Upload size={24} />
